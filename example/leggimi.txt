@@ -1,0 +1,6 @@
+Problemi FFMPEG
+
+https://www.servermanagementadmins.com/ffmpeg-error-while-loading-shared-libraries-libavdevice-so-56-cannot-open-shared-object-file-no-such-file-or-directory/
+
+https://stackoverflow.com/questions/39619583/ffmpeg-error-while-loading-shared-libraries-libavresample-so-3
+
