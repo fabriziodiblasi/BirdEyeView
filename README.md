@@ -7,9 +7,9 @@ sudo apt-get install git
 sudo apt-get install build-essential
 sudo apt-get install cmake
 sudo apt-get install pkg-config
-
+```
 Per ffmepg & opencv
-
+```bash
 apt-get update -y
 
 apt-get install \
