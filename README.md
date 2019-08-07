@@ -6,6 +6,7 @@
 sudo apt-get install git
 sudo apt-get install build-essential
 sudo apt-get install cmake
+sudo apt-get install pkg-config
 ```
 
 ### FFMPEG
