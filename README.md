@@ -2,8 +2,14 @@
 
 ## Install dependencies
 
-### FFMPEG
+```bash
+sudo apt-get install git
+sudo apt-get install build-essential
+sudo apt-get install cmake
+```
 
+### FFMPEG
+```bash
 git clone git://source.ffmpeg.org/ffmpeg.git ffmpeg
 
 cd ffmpeg
@@ -13,9 +19,10 @@ cd ffmpeg
 make -j4
 
 sudo make install
-
+```
 
 ### OPENCV
+```bash
 
 cd ~/<my_working_directory>
 
@@ -34,12 +41,11 @@ cmake  -D WITH_V4L=ON -D WITH_FFMPEG=ON -D WITH_GSTREAMER=ON  -D WITH_FFMPEG=ON 
 make -j4 (depending on number of cores -> nproc)
 
 make install
+```
 
-
-
+### Controllo del corretto funzionamento di FFMPEG 
 
 ```bash
-Controllo del corretto funzionamento di FFMPEG 
 eseguire i seguenti comandi :
 
 [root@host ~]# ffmpeg
