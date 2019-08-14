@@ -1,0 +1,3 @@
+/home/fabrizio/Documents/BirdEyeView/example/video_reader/build/CMakeFiles/rebuild_cache.dir
+/home/fabrizio/Documents/BirdEyeView/example/video_reader/build/CMakeFiles/app.dir
+/home/fabrizio/Documents/BirdEyeView/example/video_reader/build/CMakeFiles/edit_cache.dir

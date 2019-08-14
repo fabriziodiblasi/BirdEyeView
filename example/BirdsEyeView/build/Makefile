@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/fabrizio/Documenti/altro/BirdsEyeView
+CMAKE_SOURCE_DIR = /home/fabrizio/Documents/BirdEyeView/example/BirdsEyeView
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/fabrizio/Documenti/altro/BirdsEyeView/build
+CMAKE_BINARY_DIR = /home/fabrizio/Documents/BirdEyeView/example/BirdsEyeView/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/fabrizio/Documenti/altro/BirdsEyeView/build/CMakeFiles /home/fabrizio/Documenti/altro/BirdsEyeView/build/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/fabrizio/Documents/BirdEyeView/example/BirdsEyeView/build/CMakeFiles /home/fabrizio/Documents/BirdEyeView/example/BirdsEyeView/build/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/fabrizio/Documenti/altro/BirdsEyeView/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/fabrizio/Documents/BirdEyeView/example/BirdsEyeView/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target

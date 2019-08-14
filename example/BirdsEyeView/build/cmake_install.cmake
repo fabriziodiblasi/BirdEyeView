@@ -1,4 +1,4 @@
-# Install script for directory: /home/fabrizio/Documenti/altro/BirdsEyeView
+# Install script for directory: /home/fabrizio/Documents/BirdEyeView/example/BirdsEyeView
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/fabrizio/Documenti/altro/BirdsEyeView/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/fabrizio/Documents/BirdEyeView/example/BirdsEyeView/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
