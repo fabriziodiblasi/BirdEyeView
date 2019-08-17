@@ -7,31 +7,15 @@ sudo apt-get install git
 sudo apt-get install build-essential
 sudo apt-get install cmake
 sudo apt-get install pkg-config
+sudo apt-get install libgtkglext1 libgtkglext1-dev
 sudo apt-get install yasm
+```
+### CUDA
+
+```bash
 sudo ubuntu-drivers devices
 sudo ubuntu-drivers devices autoinstall
 sudo apt-get install nvidia-cuda-toolkit
-```
-Per ffmepg & opencv
-```bash
-apt-get update -y
-
-apt-get install \
-    libtiff-dev \
-    gcc \
-    g++ \
-    cmake \
-    ninja-build \
-    -y
-
-apt-get install \
-    libavutil-dev \
-    libavcodec-dev \
-    libavfilter-dev \
-    libavformat-dev \
-    libavdevice-dev \
-    pkg-config \
-    -y
 ```
 
 ### FFMPEG
