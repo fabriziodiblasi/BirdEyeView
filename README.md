@@ -46,7 +46,7 @@ mkdir build
 
 cd build
 
-cmake -D CMAKE_C_COMPILER=/usr/bin/gcc-6 -D WITH_OPENCL=ON -D WITH_OPENGL=ON -D WITH_CUDA=ON -D CUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda -DWITH_NVCUVID=OFF -DBUILD_opencv_cudacodec=ON -D WITH_V4L=ON -D WITH_FFMPEG=ON -D WITH_GSTREAMER=ON  -D WITH_FFMPEG=ON -D OPENCV_EXTRA_MODULES_PATH=/home/fabrizio/opencv_contrib/modules ..
+cmake -D CMAKE_C_COMPILER=/usr/bin/gcc-6 -D WITH_OPENCL=ON -D WITH_OPENGL=ON -D WITH_CUDA=ON -D CUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda -DWITH_NVCUVID=OFF -DBUILD_opencv_cudacodec=ON -D WITH_V4L=ON -D WITH_FFMPEG=ON -D WITH_GSTREAMER=ON  -D WITH_FFMPEG=ON -D OPENCV_EXTRA_MODULES_PATH=<my_working_directory>/opencv_contrib/modules ..
 
 make -j4 (depending on number of cores -> nproc)
 
