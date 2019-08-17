@@ -7,6 +7,10 @@ sudo apt-get install git
 sudo apt-get install build-essential
 sudo apt-get install cmake
 sudo apt-get install pkg-config
+sudo apt-get install yasm
+sudo ubuntu-drivers devices
+sudo ubuntu-drivers devices autoinstall
+sudo apt-get install nvidia-cuda-toolkit
 ```
 Per ffmepg & opencv
 ```bash
