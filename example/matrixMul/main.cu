@@ -21,22 +21,24 @@
 using namespace std;
 using namespace cv;
 #define PI 3.1415926
-
+#define DIM 4
 
 // int frameWidth = 640;
 // int frameHeight = 480;
 #define FRAMEWIDTH  640
 #define FRAMEHEIGHT 480
 
-void stampaMatrice(float *matrice){
+
+
+void stampaMatrice(float *matrice, int rig, int col){
     int idx;  
     //stampa a matrice
-    for(int i = 0; i < 4; i++){
-        for(int j = 0; j < 4; j++){
+    for(int i = 0; i < rig; i++){
+        for(int j = 0; j < col; j++){
             if (i == 0){
                 idx = j;
             }else{
-                idx = i * 4 + j;
+                idx = i * col + j;
             }
             cout << matrice[idx] << "\t";
         }
@@ -46,9 +48,23 @@ void stampaMatrice(float *matrice){
     
 }
 
+/**
 
+*/
+__global__ void generic_mat_mul(float *A, float *B, float *C, int numARows,int numAColumns, int numBRows, int numBColumns) {
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    if (row < numARows && col < numBColumns) {
+        float sum = 0;
+        for (int ii = 0; ii < numAColumns; ii++) {
+            sum += A[row * numAColumns + ii] * B[ii * numBColumns + col];
+        }
+        C[row * numBColumns + col] = sum;
+    }
+}
 
-__global__ void _matrix_Multiplication_Kernel_(float* A, float* B, float* C, int N) {
+/*
+__global__ void square_mat_mul(float* A, float* B, float* C, int N) {
 
     int ROW = blockIdx.y*blockDim.y+threadIdx.y;
     int COL = blockIdx.x*blockDim.x+threadIdx.x;
@@ -63,63 +79,91 @@ __global__ void _matrix_Multiplication_Kernel_(float* A, float* B, float* C, int
     }
     
 }
+*/
 
+/**
+    A * B = C
+    N = numero di colonne
+*/
 
-void matrixMultiplication(float *A, float *B, float *C, int N){
-
-    // declare the number of blocks per grid and the number of threads per block
-    // use 1 to 512 threads per block
-
-    //stampaMatrice(A);
-    //stampaMatrice(B);
-    
-
+cudaError_t matrixMultiplication(float *A, float *B, float *C, int numARows,int numAColumns, int numBRows, int numBColumns){
+    cudaError_t cudaStatus;
     //@@ Initialize the grid and block dimensions here
     dim3 blockDim(16, 16);
-    dim3 gridDim(ceil(((float)N) / blockDim.x), ceil(((float)N) / blockDim.y));
+    dim3 gridDim(ceil(((float)numAColumns) / blockDim.x),ceil(((float)numBRows) / blockDim.y));
+    float *d_A, *d_B, *d_C;
+
+    cudaStatus = cudaMalloc((void **) &d_A, sizeof(float)*numARows*numAColumns);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        goto Error;
+    }
+    cudaStatus = cudaMalloc((void **) &d_B, sizeof(float)*numBRows*numBColumns);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        goto Error;
+    }
+    cudaStatus = cudaMalloc((void **) &d_C, sizeof(float)*numARows * numBColumns);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        goto Error;
+    }
     
-    cudaMemset(C, 0, N * N * sizeof(float));
-    _matrix_Multiplication_Kernel_<<<gridDim, blockDim>>>(A, B, C, N);
-    //ceil(n/256.0),256
-    //_matrix_Multiplication_Kernel_<<<ceil(N/256.0),256>>>(A, B, C, N);
+    //copio i vettori
+    cudaMemcpy(d_A,A,sizeof(float)*numARows*numAColumns,cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B,B,sizeof(float)*numBRows*numBColumns,cudaMemcpyHostToDevice);
+    
+   
+
+    cudaMemset(d_C, 0, numARows * numBColumns * sizeof(float));
+
+    generic_mat_mul<<<gridDim, blockDim>>>(d_A, d_B, d_C, 2, 2, 2, 2);
+    
+    cudaStatus = cudaGetLastError();
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "addKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
+        goto Error;
+    }
+    
+    // cudaDeviceSynchronize waits for the kernel to finish, and returns
+    // any errors encountered during the launch.
+    cudaStatus = cudaDeviceSynchronize();
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching addKernel!\n", cudaStatus);
+        goto Error;
+    }
+
+    cudaStatus = cudaMemcpy(C, d_C,numARows * numBColumns * sizeof(float), cudaMemcpyDeviceToHost);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMemcpy failed!");
+        goto Error;
+    }
+    //@@ Free the GPU memory here
+Error:
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+    return cudaStatus;
+    
 }
 
+
 int main(int argc, const char *argv[]) {
-    float RX[16] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7};
+    //float RX[16] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7};
 
-    float RY[16] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7};
-
-    float RZ[16] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7};
-
+    float RX[DIM] = { 1, 2, 3, 4};
+    float RY[DIM] = { 1, 2, 3, 4};
     
-    float *d_RX, *d_RY, *d_RZ, *d_R, *d_XY;
+    float ris[DIM];
+    cout << "ciao!\n";
+    // matrixMultiplication(float *A, float *B, float *C, int numARows,int numAColumns, int numBRows, int numBColumns){
 
-    float *ris;
+    cudaError_t cudaStatus = matrixMultiplication(RX,RY,ris, 2, 2, 2, 2);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "addWithCuda failed!");
+        return 1;
+    }
 
-    cudaMalloc((void **) &d_RX, sizeof(float)*4*4);
-    cudaMalloc((void **) &d_RY, sizeof(float)*4*4);
-    cudaMalloc((void **) &d_RZ, sizeof(float)*4*4);
-    //alloco il vettore risultato
-    cudaMalloc((void **) &d_R, sizeof(float)*4*4);
-    cudaMalloc((void **) &d_XY, sizeof(float)*4*4);
-    //copio i vettori
-    cudaMemcpy(d_RX,RX,sizeof(float)*4*4,cudaMemcpyHostToDevice);
-    cudaMemcpy(d_RY,RY,sizeof(float)*4*4,cudaMemcpyHostToDevice);
-    
+    stampaMatrice(ris, 2, 2);
 
-    matrixMultiplication(d_RX,d_RY,d_XY,4);
-    
-    //in d_XY ottengo il risultato della moltiplicazione
-
-    cudaMemcpy(ris,d_XY,sizeof(float)*4*4,cudaMemcpyHostToDevice);
-
-    // for (int i=0; i<16;i++){
-    //     cout << RX[i] << " ";
-    // }
-
-    // cout << "\n\n\n";
-
-    
-    stampaMatrice(ris);
-    
 }
