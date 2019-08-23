@@ -1,4 +1,16 @@
 # BirdEyeView
+How to build the project :
+
+Here is the CMake command for you:
+```bash
+$ cd ~
+$ git clone https://github.com/fabriziodiblasi/BirdEyeView.git Progetto_HPC
+$ cd Progetto_HPC
+$ mkdir Build
+$ cd Build
+$ cmake -D CMAKE_C_COMPILER=/usr/bin/gcc-6 ..
+$ make 
+```
 
 ## Install dependencies
 

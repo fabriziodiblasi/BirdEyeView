@@ -1,4 +1,4 @@
-# Install script for directory: /home/fabrizio/Downloads/cuda_opencv_example(2)
+# Install script for directory: /home/fabrizio/Documents/Progetto_HPC/example/Opencv_cuda_mat_passing
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/fabrizio/Downloads/cuda_opencv_example(2)/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/fabrizio/Documents/Progetto_HPC/example/Opencv_cuda_mat_passing/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

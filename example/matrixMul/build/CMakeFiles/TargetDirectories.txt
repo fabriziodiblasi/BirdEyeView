@@ -1,3 +1,3 @@
-/home/fabrizio/Desktop/matrixMul/build/CMakeFiles/rebuild_cache.dir
-/home/fabrizio/Desktop/matrixMul/build/CMakeFiles/app.dir
-/home/fabrizio/Desktop/matrixMul/build/CMakeFiles/edit_cache.dir
+/home/fabrizio/Documents/Progetto_HPC/example/matrixMul/build/CMakeFiles/rebuild_cache.dir
+/home/fabrizio/Documents/Progetto_HPC/example/matrixMul/build/CMakeFiles/app.dir
+/home/fabrizio/Documents/Progetto_HPC/example/matrixMul/build/CMakeFiles/edit_cache.dir

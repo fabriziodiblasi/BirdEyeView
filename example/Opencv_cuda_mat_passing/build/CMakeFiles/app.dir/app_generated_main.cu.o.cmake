@@ -58,18 +58,18 @@ endif()
 
 # Set these up as variables to make reading the generated file easier
 set(CMAKE_COMMAND "/usr/bin/cmake") # path
-set(source_file "/home/fabrizio/Downloads/cuda_opencv_example(2)/main.cu") # path
-set(NVCC_generated_dependency_file "/home/fabrizio/Downloads/cuda_opencv_example(2)/build/CMakeFiles/app.dir//app_generated_main.cu.o.NVCC-depend") # path
-set(cmake_dependency_file "/home/fabrizio/Downloads/cuda_opencv_example(2)/build/CMakeFiles/app.dir//app_generated_main.cu.o.depend") # path
+set(source_file "/home/fabrizio/Documents/Progetto_HPC/example/Opencv_cuda_mat_passing/main.cu") # path
+set(NVCC_generated_dependency_file "/home/fabrizio/Documents/Progetto_HPC/example/Opencv_cuda_mat_passing/build/CMakeFiles/app.dir//app_generated_main.cu.o.NVCC-depend") # path
+set(cmake_dependency_file "/home/fabrizio/Documents/Progetto_HPC/example/Opencv_cuda_mat_passing/build/CMakeFiles/app.dir//app_generated_main.cu.o.depend") # path
 set(CUDA_make2cmake "/usr/share/cmake-3.10/Modules/FindCUDA/make2cmake.cmake") # path
 set(CUDA_parse_cubin "/usr/share/cmake-3.10/Modules/FindCUDA/parse_cubin.cmake") # path
 set(build_cubin OFF) # bool
 set(CUDA_HOST_COMPILER "/usr/bin/gcc-6") # path
 # We won't actually use these variables for now, but we need to set this, in
 # order to force this file to be run again if it changes.
-set(generated_file_path "/home/fabrizio/Downloads/cuda_opencv_example(2)/build/CMakeFiles/app.dir//.") # path
-set(generated_file_internal "/home/fabrizio/Downloads/cuda_opencv_example(2)/build/CMakeFiles/app.dir//./app_generated_main.cu.o") # path
-set(generated_cubin_file_internal "/home/fabrizio/Downloads/cuda_opencv_example(2)/build/CMakeFiles/app.dir//./app_generated_main.cu.o.cubin.txt") # path
+set(generated_file_path "/home/fabrizio/Documents/Progetto_HPC/example/Opencv_cuda_mat_passing/build/CMakeFiles/app.dir//.") # path
+set(generated_file_internal "/home/fabrizio/Documents/Progetto_HPC/example/Opencv_cuda_mat_passing/build/CMakeFiles/app.dir//./app_generated_main.cu.o") # path
+set(generated_cubin_file_internal "/home/fabrizio/Documents/Progetto_HPC/example/Opencv_cuda_mat_passing/build/CMakeFiles/app.dir//./app_generated_main.cu.o.cubin.txt") # path
 
 set(CUDA_NVCC_EXECUTABLE "/usr/bin/nvcc") # path
 set(CUDA_NVCC_FLAGS  ;; ) # list
