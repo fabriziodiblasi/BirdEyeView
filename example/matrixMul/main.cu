@@ -21,7 +21,7 @@
 using namespace std;
 using namespace cv;
 #define PI 3.1415926
-#define DIM 4
+
 
 // int frameWidth = 640;
 // int frameHeight = 480;
@@ -63,24 +63,6 @@ __global__ void generic_mat_mul(float *A, float *B, float *C, int numARows,int n
     }
 }
 
-/*
-__global__ void square_mat_mul(float* A, float* B, float* C, int N) {
-
-    int ROW = blockIdx.y*blockDim.y+threadIdx.y;
-    int COL = blockIdx.x*blockDim.x+threadIdx.x;
-
-    if (ROW < N && COL < N) {
-        float tmpSum = 0;
-        // each thread computes one element of the block sub-matrix
-        for (int i = 0; i < N; i++) {
-            tmpSum += A[ROW * N + i] * B[i * N + COL];
-        }
-        C[ROW * N + COL] = tmpSum;
-    }
-    
-}
-*/
-
 /**
     A * B = C
     N = numero di colonne
@@ -91,6 +73,19 @@ cudaError_t matrixMultiplication(float *A, float *B, float *C, int numARows,int 
     //@@ Initialize the grid and block dimensions here
     dim3 blockDim(16, 16);
     dim3 gridDim(ceil(((float)numAColumns) / blockDim.x),ceil(((float)numBRows) / blockDim.y));
+    
+    /*
+    dim3 blockDim(numARows, numBColumns);
+    dim3 gridDim(1, 1);
+    //<<<blocksPerGrid,threadsPerBlock>>>
+    if (numARows * numBColumns > 512){
+        blockDim.x = 512;
+        blockDim.y = 512;
+        gridDim.x = ceil(double(numBColumns)/double(blockDim.x));
+        gridDim.y = ceil(double(numARows)/double(blockDim.y));
+    }
+    */ 
+    
     float *d_A, *d_B, *d_C;
 
     cudaStatus = cudaMalloc((void **) &d_A, sizeof(float)*numARows*numAColumns);
@@ -117,11 +112,11 @@ cudaError_t matrixMultiplication(float *A, float *B, float *C, int numARows,int 
 
     cudaMemset(d_C, 0, numARows * numBColumns * sizeof(float));
 
-    generic_mat_mul<<<gridDim, blockDim>>>(d_A, d_B, d_C, 2, 2, 2, 2);
+    generic_mat_mul<<<gridDim, blockDim>>>(d_A, d_B, d_C, numARows, numAColumns, numBRows, numBColumns);
     
     cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "addKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
+        fprintf(stderr, "Kernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
         goto Error;
     }
     
@@ -148,22 +143,25 @@ Error:
 }
 
 
-int main(int argc, const char *argv[]) {
-    //float RX[16] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7};
 
-    float RX[DIM] = { 1, 2, 3, 4};
-    float RY[DIM] = { 1, 2, 3, 4};
+int main(int argc, const char *argv[]) {
+    //
+    float RX[16] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7};
+    float RY[16] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7};
+
+    //float RX[4] = { 1, 2, 3, 4};
+    //float RY[4] = { 1, 2, 3, 4};
     
-    float ris[DIM];
-    cout << "ciao!\n";
+    float ris[16];
+    //cout << "ciao!\n";
     // matrixMultiplication(float *A, float *B, float *C, int numARows,int numAColumns, int numBRows, int numBColumns){
 
-    cudaError_t cudaStatus = matrixMultiplication(RX,RY,ris, 2, 2, 2, 2);
+    cudaError_t cudaStatus = matrixMultiplication(RX,RY,ris, 4, 4, 4, 4);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "addWithCuda failed!");
         return 1;
     }
 
-    stampaMatrice(ris, 2, 2);
+    stampaMatrice(ris, 4, 4);
 
 }
