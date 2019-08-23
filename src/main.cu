@@ -1,21 +1,5 @@
-// C++ imports
-#include <iostream>
-#include<cstdio>
-#include <ctime>
-#include <cmath>
-#include "bits/time.h"
-
-//#include <opencv2/opencv.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/imgcodecs/imgcodecs.hpp>
-#include "opencv2/core/cuda.hpp"
-#include <opencv2/cudaarithm.hpp>
-#include <opencv2/cudaimgproc.hpp>
-#include <opencv2/imgcodecs.hpp>
-
-#include<cuda_runtime.h>
+//#include "/home/fabrizio/Documents/Progetto_HPC/lib/utilities.h"
+#include "../lib/utilities.h"
 
 // namespaces
 using namespace std;
@@ -76,7 +60,7 @@ __global__ void rotation_multiply_kernel(float *d_RX,float *d_RY,float *d_R, int
 }
 
 
-void cuda_wrapper(const Mat &input, Mat &output){
+void birdsEyeView(const Mat &input, Mat &output){
     double focalLength, dist, alpha, beta, gamma; 
 
     alpha =((double)alpha_ -90) * PI/180;
@@ -155,7 +139,7 @@ void cuda_wrapper(const Mat &input, Mat &output){
 
 
 
-void cuda_wrapper_new(const Mat &input, Mat &output){
+void CUDA_birdsEyeView(const Mat &input, Mat &output){
 
     double focalLength, dist, alpha, beta, gamma; 
 
@@ -167,99 +151,13 @@ void cuda_wrapper_new(const Mat &input, Mat &output){
 
     Size input_size = input.size();
     double w = (double)input_size.width, h = (double)input_size.height;
-
-
-    // Projecion matrix 2D -> 3D
     /*
-    Mat A1 = (Mat_<float>(4, 3)<< 
-        1, 0, -w/2,
-        0, 1, -h/2,
-        0, 0, 0,
-        0, 0, 1 );
-    */
-   
-    //DEFINIZIONE A VETTORE :
-    float A1[12] {1, 0, -w/2, 0, 1, -h/2, 0, 0, 0, 0, 0, 1};
-    
-    float RX[16] = { 1, 0, 0, 0, 0, cos(alpha), -sin(alpha), 0 , 0, sin(alpha), cos(alpha), 0, 0, 0, 0, 1};
-
-    float RY[16] = {cos(beta), 0, -sin(beta), 0,0, 1, 0, 0,sin(beta), 0, cos(beta), 0,0, 0, 0, 1};
-
-    float RZ[16] = {cos(gamma), -sin(gamma), 0, 0,sin(gamma), cos(gamma), 0, 0,0, 0, 1, 0,0, 0, 0, 1};
-
-    float R[16];
-
-    float *d_RX, *d_RY, *d_RZ, *d_R, *d_XY;
-    cudaMalloc((void **) &d_RX, sizeof(float)*4*4);
-    cudaMalloc((void **) &d_RY, sizeof(float)*4*4);
-    cudaMalloc((void **) &d_RZ, sizeof(float)*4*4);
-    //alloco il vettore risultato
-    cudaMalloc((void **) &d_R, sizeof(float)*4*4);
-    cudaMalloc((void **) &d_XY, sizeof(float)*4*4);
-    //copio i vettori
-    cudaMemcpy(d_RX,RX,sizeof(float)*4*4,cudaMemcpyHostToDevice);
-    cudaMemcpy(d_RY,RY,sizeof(float)*4*4,cudaMemcpyHostToDevice);
-    cudaMemcpy(d_RY,RY,sizeof(float)*4*4,cudaMemcpyHostToDevice);
-
-    //Setup the execution configuration
-    // dim3 dimBlock(4,4);
-    // dim3 dimGrid(1,1);
-    dim3 threadsPerBlock(4, 4);
-    dim3 blocksPerGrid(1, 1);
-
-    //Launch the device computation threads!
-    rotation_multiply_kernel<<<blocksPerGrid,threadsPerBlock>>>(d_RX,d_RY,d_XY,4);
-    rotation_multiply_kernel<<<blocksPerGrid,threadsPerBlock>>>(d_XY,d_RZ,d_R,4);
-    
-    cudaDeviceSynchronize();
-
-    // R - rotation matrix
-    //Mat R = RX * RY * RZ;
-    cudaMemcpy(R,d_R,sizeof(float)*4*4,cudaMemcpyDeviceToHost);
-
-    Mat R_mat =(Mat_<float>(4,4));
-    memcpy(R_mat.data, R, 16 *sizeof(float));
-    /*
-    Mat m = Mat(rows, cols, CV_8UC1); // initialize matrix of uchar of 1-channel where you will store vec data
-    //copy vector to mat
-    memcpy(m.data, vec.data(), vec.size()*sizeof(uchar)); // change uchar to any type of data values that you want to use instead
-    */
-    for(int i=0; i<16;i++){
-        cout<<"R : " << R[i] << endl;
-    }
-     // Projecion matrix 2D -> 3D
-    /*
-    Mat A1 = (Mat_<float>(4, 3)<< 
-        1, 0, -w/2,
-        0, 1, -h/2,
-        0, 0, 0,
-        0, 0, 1 );
-
-    // T - translation matrix
-    Mat T = (Mat_<float>(4, 4) << 
-        1, 0, 0, 0,  
-        0, 1, 0, 0,  
-        0, 0, 1, dist,  
-        0, 0, 0, 1); 
-    
-    // K - intrinsic matrix 
-    Mat K = (Mat_<float>(3, 4) << 
-        focalLength, 0, w/2, 0,
-        0, focalLength, h/2, 0,
-        0, 0, 1, 0
-        ); 
+    compito :
+    parallelizzare la funzione birdsEyeView
+    aggiungere il file che fa il prodotto tra matrici in cuda
     */
 
-    //Mat transformationMat = K * (T * (R * A1));
-    //cout<< "transformationMat.rows : " << transformationMat.rows << "\ttransformationMat.cols : " << transformationMat.cols << endl;
-    //cout << "tipo matrice di transformazione : "<< "CV_" + type2str( transformationMat.type()) << endl;
-
-    //warpPerspective(input, output, transformationMat, input_size, INTER_CUBIC | WARP_INVERSE_MAP);
-    
-
-    output=input.clone();
     return;
-
 
 }
 
@@ -320,7 +218,7 @@ int main(int argc, char const *argv[]) {
 
 
 		          
-        cuda_wrapper_new(image, output);
+        birdsEyeView(image, output);
         
         
         //per la visualizzazione 

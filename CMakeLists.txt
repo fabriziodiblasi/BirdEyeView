@@ -11,7 +11,7 @@ find_package(CUDA REQUIRED)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-cuda_add_executable(app main.cu)
+cuda_add_executable(app src/main.cu src/utilities.cu)
 
 target_link_libraries(app ${OpenCV_LIBS})
 
