@@ -1,0 +1,4 @@
+Come Compilare
+
+
+cmake -D CMAKE_C_COMPILER=/usr/bin/gcc-6 ..

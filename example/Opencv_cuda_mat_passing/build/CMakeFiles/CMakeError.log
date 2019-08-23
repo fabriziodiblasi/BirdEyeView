@@ -1,0 +1,55 @@
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /home/fabrizio/Downloads/cuda_opencv_example(2)/build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_043fc/fast"
+/usr/bin/make -f CMakeFiles/cmTC_043fc.dir/build.make CMakeFiles/cmTC_043fc.dir/build
+make[1]: Entering directory '/home/fabrizio/Downloads/cuda_opencv_example(2)/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_043fc.dir/CheckSymbolExists.c.o
+/usr/bin/gcc-6   -fPIC    -o CMakeFiles/cmTC_043fc.dir/CheckSymbolExists.c.o   -c "/home/fabrizio/Downloads/cuda_opencv_example(2)/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c"
+Linking C executable cmTC_043fc
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_043fc.dir/link.txt --verbose=1
+/usr/bin/gcc-6 -fPIC     -rdynamic CMakeFiles/cmTC_043fc.dir/CheckSymbolExists.c.o  -o cmTC_043fc 
+CMakeFiles/cmTC_043fc.dir/CheckSymbolExists.c.o: In function `main':
+CheckSymbolExists.c:(.text+0x1b): undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_043fc.dir/build.make:97: recipe for target 'cmTC_043fc' failed
+make[1]: *** [cmTC_043fc] Error 1
+make[1]: Leaving directory '/home/fabrizio/Downloads/cuda_opencv_example(2)/build/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_043fc/fast' failed
+make: *** [cmTC_043fc/fast] Error 2
+
+File /home/fabrizio/Downloads/cuda_opencv_example(2)/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /home/fabrizio/Downloads/cuda_opencv_example(2)/build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_f1318/fast"
+/usr/bin/make -f CMakeFiles/cmTC_f1318.dir/build.make CMakeFiles/cmTC_f1318.dir/build
+make[1]: Entering directory '/home/fabrizio/Downloads/cuda_opencv_example(2)/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_f1318.dir/CheckFunctionExists.c.o
+/usr/bin/gcc-6   -fPIC -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_f1318.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.10/Modules/CheckFunctionExists.c
+Linking C executable cmTC_f1318
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f1318.dir/link.txt --verbose=1
+/usr/bin/gcc-6 -fPIC -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_f1318.dir/CheckFunctionExists.c.o  -o cmTC_f1318 -lpthreads 
+/usr/bin/x86_64-linux-gnu-ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_f1318.dir/build.make:97: recipe for target 'cmTC_f1318' failed
+make[1]: *** [cmTC_f1318] Error 1
+make[1]: Leaving directory '/home/fabrizio/Downloads/cuda_opencv_example(2)/build/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_f1318/fast' failed
+make: *** [cmTC_f1318/fast] Error 2
+
+

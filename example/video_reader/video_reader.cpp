@@ -2,7 +2,7 @@
 
 #include "opencv2/opencv_modules.hpp"
 
-//#if defined(HAVE_OPENCV_CUDACODEC)
+#if defined(HAVE_OPENCV_CUDACODEC)
 
 #include <string>
 #include <vector>
@@ -83,7 +83,7 @@ int main(int argc, const char* argv[])
 
     return 0;
 }
-/*
+
 #else
 
 int main()
@@ -93,4 +93,3 @@ int main()
 }
 
 #endif
-*/
