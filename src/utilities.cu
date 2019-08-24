@@ -4,16 +4,11 @@ using namespace std;
 using namespace cv;
 
 void stampaMatrice(float *matrice, int rig, int col){
-    int idx;  
     //stampa a matrice
     for(int i = 0; i < rig; i++){
         for(int j = 0; j < col; j++){
-            if (i == 0){
-                idx = j;
-            }else{
-                idx = i * col + j;
-            }
-            cout << matrice[idx] << "\t";
+            
+            cout << matrice[i * col + j] << "\t";
         }
         cout<<"\n";
     }
@@ -79,6 +74,7 @@ cudaError_t matrixMultiplication(float *A, float *B, float *C, int numARows,int 
     
     //copio i vettori
     cudaMemcpy(d_A,A,sizeof(float)*numARows*numAColumns,cudaMemcpyHostToDevice);
+    
     cudaMemcpy(d_B,B,sizeof(float)*numBRows*numBColumns,cudaMemcpyHostToDevice);
     
    
@@ -114,3 +110,16 @@ Error:
     return cudaStatus;
     
 }
+
+
+
+void arrayToMat(cv::Mat &mat, float *array, int numElem){
+    memcpy(mat.ptr(),array,numElem * sizeof(float));
+}
+
+
+void matToArray(float *array, cv::Mat &mat, int numElem){
+    memcpy(array,mat.ptr(),numElem * sizeof(float));
+}
+
+

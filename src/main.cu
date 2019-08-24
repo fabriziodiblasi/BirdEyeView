@@ -1,4 +1,3 @@
-//#include "/home/fabrizio/Documents/Progetto_HPC/lib/utilities.h"
 #include "../lib/utilities.h"
 
 // namespaces
@@ -105,7 +104,6 @@ void birdsEyeView(const Mat &input, Mat &output){
     // R - rotation matrix
     Mat R = RX * RY * RZ;
 
-    cout<< " R : "<< R << endl;
 
 
     // T - translation matrix
@@ -124,6 +122,9 @@ void birdsEyeView(const Mat &input, Mat &output){
 
 
     Mat transformationMat = K * (T * (R * A1));
+
+    cout<< " transformationMat : \n "<< transformationMat << endl;
+
     //cout<< "transformationMat.rows : " << transformationMat.rows << "\ttransformationMat.cols : " << transformationMat.cols << endl;
     //cout << "tipo matrice di transformazione : "<< "CV_" + type2str( transformationMat.type()) << endl;
 
@@ -141,6 +142,8 @@ void birdsEyeView(const Mat &input, Mat &output){
 
 void CUDA_birdsEyeView(const Mat &input, Mat &output){
 
+    cudaError_t error;
+
     double focalLength, dist, alpha, beta, gamma; 
 
     alpha =((double)alpha_ -90) * PI/180;
@@ -156,6 +159,100 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
     parallelizzare la funzione birdsEyeView
     aggiungere il file che fa il prodotto tra matrici in cuda
     */
+
+    float A1[12] = {
+        1, 0, -w/2,
+        0, 1, -h/2,
+        0, 0, 0,
+        0, 0, 1 
+    };
+
+
+
+    float RX[16] = {
+        1, 0, 0, 0,
+        0, cos(alpha), -sin(alpha), 0,
+        0, sin(alpha), cos(alpha), 0,
+        0, 0, 0, 1 
+    };
+
+    float RY[16] ={
+        cos(beta), 0, -sin(beta), 0,
+        0, 1, 0, 0,
+        sin(beta), 0, cos(beta), 0,
+        0, 0, 0, 1
+    };
+
+    float RZ[16] = {
+        cos(gamma), -sin(gamma), 0, 0,
+        sin(gamma), cos(gamma), 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    };
+
+    // cout << "stampo RX \n";
+    // stampaMatrice(RX , 4, 4);
+    // R - rotation matrix
+    // Mat R = RX * RY * RZ;
+
+    float R[16], XY[16];
+    error = matrixMultiplication(RX, RY, XY, 4, 4, 4, 4);
+    if (error != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        exit(0);
+    }
+    error = matrixMultiplication(XY, RZ, R, 4, 4, 4, 4);
+    if (error != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        exit(0);
+    }
+    /*
+    cout << "stampo R \n";
+    stampaMatrice(R, 4, 4);
+    */
+    // T - translation matrix
+    float T[16] = { 
+        1, 0, 0, 0,  
+        0, 1, 0, 0,  
+        0, 0, 1, dist,  
+        0, 0, 0, 1
+    }; 
+    // K - intrinsic matrix 
+    float K[12] = { 
+        focalLength, 0, w/2, 0,
+        0, focalLength, h/2, 0,
+        0, 0, 1, 0
+    };
+
+    //Mat transformationMat = K * (T * (R * A1));
+    float R_A1[12], T_RA1[12], transformationvector[9];
+
+    error = matrixMultiplication(R, A1, R_A1, 4, 4, 4, 3);
+    if (error != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        exit(0);
+    }
+
+    error = matrixMultiplication(T, R_A1, T_RA1, 4, 4, 4, 3);
+    if (error != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        exit(0);
+    }
+
+    error = matrixMultiplication(K, T_RA1, transformationvector, 4, 4, 4, 4);
+    if (error != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        exit(0);
+    }
+
+    cv::Mat tranf_mat(3,3,CV_32FC1);
+
+    arrayToMat(tranf_mat,transformationvector,9);
+    cout << "matrice di transformazione : \n" << tranf_mat << endl;
+
+    //DA ELIMINARE --- SOLO A SCOPO DI DEBUG
+    //output=input.clone();
+    warpPerspective(input, output, tranf_mat, input_size, INTER_CUBIC | WARP_INVERSE_MAP);
 
     return;
 
@@ -219,7 +316,7 @@ int main(int argc, char const *argv[]) {
 
 		          
         birdsEyeView(image, output);
-        
+        //CUDA_birdsEyeView(image, output);
         
         //per la visualizzazione 
         if(output.empty())
