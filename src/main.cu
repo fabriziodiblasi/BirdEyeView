@@ -11,6 +11,8 @@ using namespace cv;
 #define FRAMEWIDTH  640
 #define FRAMEHEIGHT 480
 
+bool CUDA = true;
+
 
 // ---- GLOBAL VAR ----
 int alpha_ = 90, beta_ = 90, gamma_ = 90;
@@ -103,6 +105,7 @@ void birdsEyeView(const Mat &input, Mat &output){
 
     // R - rotation matrix
     Mat R = RX * RY * RZ;
+    cout<< " R : \n "<< R << endl;
 
 
 
@@ -206,10 +209,10 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
         fprintf(stderr, "cudaMalloc failed!");
         exit(0);
     }
-    /*
+    
     cout << "stampo R \n";
     stampaMatrice(R, 4, 4);
-    */
+    
     // T - translation matrix
     float T[16] = { 
         1, 0, 0, 0,  
@@ -247,8 +250,12 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
 
     cv::Mat tranf_mat(3,3,CV_32FC1);
 
+    cout << "stampo T \n";
+    stampaMatrice(transformationvector, 3, 3);
+
+
     arrayToMat(tranf_mat,transformationvector,9);
-    cout << "matrice di transformazione : \n" << tranf_mat << endl;
+    //cout << "matrice di transformazione : \n" << tranf_mat << endl;
 
     //DA ELIMINARE --- SOLO A SCOPO DI DEBUG
     //output=input.clone();
@@ -264,7 +271,7 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
 int main(int argc, char const *argv[]) {
 	
 	if(argc > 2) {
-      cerr << "Usage: " << argv[0] << " ' /path/to/video/ '  or nothing " << endl;
+      cerr << "Usage: " << argv[0] << " <' /path/to/video/ ' | nothing > " << endl;
       cout << "Exiting...." << endl;
       return -1;
     }
@@ -312,12 +319,11 @@ int main(int argc, char const *argv[]) {
         }
         resize(image, image,Size(FRAMEWIDTH, FRAMEHEIGHT));
 
-
-
-		          
-        birdsEyeView(image, output);
-        //CUDA_birdsEyeView(image, output);
-        
+        if (CUDA){
+            CUDA_birdsEyeView(image, output);
+        }else{
+            birdsEyeView(image, output);
+        }
         //per la visualizzazione 
         if(output.empty())
             break;
