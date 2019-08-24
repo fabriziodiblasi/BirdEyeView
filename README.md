@@ -48,11 +48,13 @@ sudo make install
 
 cd ~/<my_working_directory>
 
-git clone https://github.com/opencv/opencv.git
+wget -O opencv.zip https://github.com/opencv/opencv/archive/4.1.1.zip 
+
+unzip opencv.zip -d .
 
 git clone https://github.com/opencv/opencv_contrib.git
 
-cd ~/opencv
+cd ~/opencv-4.1.1
 
 mkdir build
 
