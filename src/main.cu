@@ -43,97 +43,102 @@ string type2str(int type) {
 	return r;
 }
 
-
+/*
 __global__ void rotation_multiply_kernel(float *d_RX,float *d_RY,float *d_R, int N){
-    int ROW = blockIdx.y*blockDim.y+threadIdx.y;
-    int COL = blockIdx.x*blockDim.x+threadIdx.x;
+	int ROW = blockIdx.y*blockDim.y+threadIdx.y;
+	int COL = blockIdx.x*blockDim.x+threadIdx.x;
 
-    float tmpSum = 0;
+	float tmpSum = 0;
 
-    if (ROW < N && COL < N) {
-        // each thread computes one element of the block sub-matrix
-        for (int i = 0; i < N; i++) {
-            tmpSum += d_RX[ROW * N + i] * d_RY[i * N + COL];
-        }
-    }
-    d_R[ROW * N + COL] = tmpSum;
+	if (ROW < N && COL < N) {
+		// each thread computes one element of the block sub-matrix
+		for (int i = 0; i < N; i++) {
+			tmpSum += d_RX[ROW * N + i] * d_RY[i * N + COL];
+		}
+	}
+	d_R[ROW * N + COL] = tmpSum;
 
 }
-
+*/
 
 void birdsEyeView(const Mat &input, Mat &output){
-    double focalLength, dist, alpha, beta, gamma; 
+	double focalLength, dist, alpha, beta, gamma; 
 
-    alpha =((double)alpha_ -90) * PI/180;
-    beta =((double)beta_ -90) * PI/180;
-    gamma =((double)gamma_ -90) * PI/180;
-    focalLength = (double)f_;
-    dist = (double)dist_;
+	alpha =((double)alpha_ -90) * PI/180;
+	beta =((double)beta_ -90) * PI/180;
+	gamma =((double)gamma_ -90) * PI/180;
+	focalLength = (double)f_;
+	dist = (double)dist_;
 
-    Size input_size = input.size();
-    double w = (double)input_size.width, h = (double)input_size.height;
-
-
-    // Projecion matrix 2D -> 3D
-    
-    Mat A1 = (Mat_<float>(4, 3)<< 
-        1, 0, -w/2,
-        0, 1, -h/2,
-        0, 0, 0,
-        0, 0, 1 );
-    
-    
-    // Rotation matrices Rx, Ry, Rz
-
-    Mat RX = (Mat_<float>(4, 4) << 
-        1, 0, 0, 0,
-        0, cos(alpha), -sin(alpha), 0,
-        0, sin(alpha), cos(alpha), 0,
-        0, 0, 0, 1 );
-
-    Mat RY = (Mat_<float>(4, 4) << 
-        cos(beta), 0, -sin(beta), 0,
-        0, 1, 0, 0,
-        sin(beta), 0, cos(beta), 0,
-        0, 0, 0, 1	);
-
-    Mat RZ = (Mat_<float>(4, 4) << 
-        cos(gamma), -sin(gamma), 0, 0,
-        sin(gamma), cos(gamma), 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1	);
-
-    // R - rotation matrix
-    Mat R = RX * RY * RZ;
-    cout<< " R : \n "<< R << endl;
+	Size input_size = input.size();
+	double w = (double)input_size.width, h = (double)input_size.height;
 
 
+	// Projecion matrix 2D -> 3D
+	
+	Mat A1 = (Mat_<float>(4, 3)<< 
+		1, 0, -w/2,
+		0, 1, -h/2,
+		0, 0, 0,
+		0, 0, 1 );
+	
+	
+	// Rotation matrices Rx, Ry, Rz
 
-    // T - translation matrix
-    Mat T = (Mat_<float>(4, 4) << 
-        1, 0, 0, 0,  
-        0, 1, 0, 0,  
-        0, 0, 1, dist,  
-        0, 0, 0, 1); 
-    
-    // K - intrinsic matrix 
-    Mat K = (Mat_<float>(3, 4) << 
-        focalLength, 0, w/2, 0,
-        0, focalLength, h/2, 0,
-        0, 0, 1, 0
-        ); 
+	Mat RX = (Mat_<float>(4, 4) << 
+		1, 0, 0, 0,
+		0, cos(alpha), -sin(alpha), 0,
+		0, sin(alpha), cos(alpha), 0,
+		0, 0, 0, 1 );
+
+	Mat RY = (Mat_<float>(4, 4) << 
+		cos(beta), 0, -sin(beta), 0,
+		0, 1, 0, 0,
+		sin(beta), 0, cos(beta), 0,
+		0, 0, 0, 1	);
+
+	Mat RZ = (Mat_<float>(4, 4) << 
+		cos(gamma), -sin(gamma), 0, 0,
+		sin(gamma), cos(gamma), 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1	);
+
+	// R - rotation matrix
+	Mat R = RX * RY * RZ;
+	cout<< " R : \n "<< R << endl;
 
 
-    Mat transformationMat = K * (T * (R * A1));
 
-    cout<< " transformationMat : \n "<< transformationMat << endl;
+	// T - translation matrix
+	Mat T = (Mat_<float>(4, 4) << 
+		1, 0, 0, 0,  
+		0, 1, 0, 0,  
+		0, 0, 1, dist,  
+		0, 0, 0, 1); 
+	
+	// K - intrinsic matrix 
+	Mat K = (Mat_<float>(3, 4) << 
+		focalLength, 0, w/2, 0,
+		0, focalLength, h/2, 0,
+		0, 0, 1, 0
+		); 
 
-    //cout<< "transformationMat.rows : " << transformationMat.rows << "\ttransformationMat.cols : " << transformationMat.cols << endl;
-    //cout << "tipo matrice di transformazione : "<< "CV_" + type2str( transformationMat.type()) << endl;
+	cout << "\n R * A1 :\n"<< R * A1 <<endl;
+	
+	cout << "\n T * (R * A1) : \n"<< T * (R * A1) <<endl;	
 
-    warpPerspective(input, output, transformationMat, input_size, INTER_CUBIC | WARP_INVERSE_MAP);
+	cout << "\n K * (T * (R * A1)) : \n"<< K * (T * (R * A1)) <<endl;	
 
-    return;
+	Mat transformationMat = K * (T * (R * A1));
+
+	//cout<< " transformationMat : \n "<< transformationMat << endl;
+
+	//cout<< "transformationMat.rows : " << transformationMat.rows << "\ttransformationMat.cols : " << transformationMat.cols << endl;
+	//cout << "tipo matrice di transformazione : "<< "CV_" + type2str( transformationMat.type()) << endl;
+
+	warpPerspective(input, output, transformationMat, input_size, INTER_CUBIC | WARP_INVERSE_MAP);
+
+	return;
 
 
 
@@ -145,123 +150,127 @@ void birdsEyeView(const Mat &input, Mat &output){
 
 void CUDA_birdsEyeView(const Mat &input, Mat &output){
 
-    cudaError_t error;
+	cudaError_t error;
 
-    double focalLength, dist, alpha, beta, gamma; 
+	double focalLength, dist, alpha, beta, gamma; 
 
-    alpha =((double)alpha_ -90) * PI/180;
-    beta =((double)beta_ -90) * PI/180;
-    gamma =((double)gamma_ -90) * PI/180;
-    focalLength = (double)f_;
-    dist = (double)dist_;
+	alpha =((double)alpha_ -90) * PI/180;
+	beta =((double)beta_ -90) * PI/180;
+	gamma =((double)gamma_ -90) * PI/180;
+	focalLength = (double)f_;
+	dist = (double)dist_;
 
-    Size input_size = input.size();
-    double w = (double)input_size.width, h = (double)input_size.height;
-    /*
-    compito :
-    parallelizzare la funzione birdsEyeView
-    aggiungere il file che fa il prodotto tra matrici in cuda
-    */
+	Size input_size = input.size();
+	double w = (double)input_size.width, h = (double)input_size.height;
+	/*
+	compito :
+	parallelizzare la funzione birdsEyeView
+	aggiungere il file che fa il prodotto tra matrici in cuda
+	*/
 
-    float A1[12] = {
-        1, 0, -w/2,
-        0, 1, -h/2,
-        0, 0, 0,
-        0, 0, 1 
-    };
-
-
-
-    float RX[16] = {
-        1, 0, 0, 0,
-        0, cos(alpha), -sin(alpha), 0,
-        0, sin(alpha), cos(alpha), 0,
-        0, 0, 0, 1 
-    };
-
-    float RY[16] ={
-        cos(beta), 0, -sin(beta), 0,
-        0, 1, 0, 0,
-        sin(beta), 0, cos(beta), 0,
-        0, 0, 0, 1
-    };
-
-    float RZ[16] = {
-        cos(gamma), -sin(gamma), 0, 0,
-        sin(gamma), cos(gamma), 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-    };
-
-    // cout << "stampo RX \n";
-    // stampaMatrice(RX , 4, 4);
-    // R - rotation matrix
-    // Mat R = RX * RY * RZ;
-
-    float R[16], XY[16];
-    error = matrixMultiplication(RX, RY, XY, 4, 4, 4, 4);
-    if (error != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        exit(0);
-    }
-    error = matrixMultiplication(XY, RZ, R, 4, 4, 4, 4);
-    if (error != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        exit(0);
-    }
-    
-    cout << "stampo R \n";
-    stampaMatrice(R, 4, 4);
-    
-    // T - translation matrix
-    float T[16] = { 
-        1, 0, 0, 0,  
-        0, 1, 0, 0,  
-        0, 0, 1, dist,  
-        0, 0, 0, 1
-    }; 
-    // K - intrinsic matrix 
-    float K[12] = { 
-        focalLength, 0, w/2, 0,
-        0, focalLength, h/2, 0,
-        0, 0, 1, 0
-    };
-
-    //Mat transformationMat = K * (T * (R * A1));
-    float R_A1[12], T_RA1[12], transformationvector[9];
-
-    error = matrixMultiplication(R, A1, R_A1, 4, 4, 4, 3);
-    if (error != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        exit(0);
-    }
-
-    error = matrixMultiplication(T, R_A1, T_RA1, 4, 4, 4, 3);
-    if (error != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        exit(0);
-    }
-
-    error = matrixMultiplication(K, T_RA1, transformationvector, 4, 4, 4, 4);
-    if (error != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        exit(0);
-    }
-
-    cv::Mat tranf_mat(3,3,CV_32FC1);
-
-    cout << "stampo T \n";
-    stampaMatrice(transformationvector, 3, 3);
+	float A1[12] = {
+		1, 0, -w/2,
+		0, 1, -h/2,
+		0, 0, 0,
+		0, 0, 1 
+	};
 
 
-    arrayToMat(tranf_mat,transformationvector,9);
-    //cout << "matrice di transformazione : \n" << tranf_mat << endl;
 
-    //DA ELIMINARE --- SOLO A SCOPO DI DEBUG
-    //output=input.clone();
-    warpPerspective(input, output, tranf_mat, input_size, INTER_CUBIC | WARP_INVERSE_MAP);
+	float RX[16] = {
+		1, 0, 0, 0,
+		0, cos(alpha), -sin(alpha), 0,
+		0, sin(alpha), cos(alpha), 0,
+		0, 0, 0, 1 
+	};
 
-    return;
+	float RY[16] ={
+		cos(beta), 0, -sin(beta), 0,
+		0, 1, 0, 0,
+		sin(beta), 0, cos(beta), 0,
+		0, 0, 0, 1
+	};
+
+	float RZ[16] = {
+		cos(gamma), -sin(gamma), 0, 0,
+		sin(gamma), cos(gamma), 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	};
+
+	// cout << "stampo RX \n";
+	// stampaMatrice(RX , 4, 4);
+	// R - rotation matrix
+	// Mat R = RX * RY * RZ;
+
+	float R[16], XY[16];
+	error = matrixMultiplication(RX, RY, XY, 4, 4, 4, 4);
+	if (error != cudaSuccess) {
+		fprintf(stderr, "cudaMalloc failed!");
+		exit(0);
+	}
+	error = matrixMultiplication(XY, RZ, R, 4, 4, 4, 4);
+	if (error != cudaSuccess) {
+		fprintf(stderr, "cudaMalloc failed!");
+		exit(0);
+	}
+	
+	cout << "stampo R \n";
+	stampaMatrice(R, 4, 4);
+	
+	// T - translation matrix
+	float T[16] = { 
+		1, 0, 0, 0,  
+		0, 1, 0, 0,  
+		0, 0, 1, dist,  
+		0, 0, 0, 1
+	}; 
+	// K - intrinsic matrix 
+	float K[12] = { 
+		focalLength, 0, w/2, 0,
+		0, focalLength, h/2, 0,
+		0, 0, 1, 0
+	};
+
+	//Mat transformationMat = K * (T * (R * A1));
+	float R_A1[12], T_RA1[12], transformationvector[9];
+
+	error = matrixMultiplication(R, A1, R_A1, 4, 4, 4, 3);
+	if (error != cudaSuccess) {
+		fprintf(stderr, "cudaMalloc failed!");
+		exit(0);
+	}
+	cout << "R * A1 \n";
+	stampaMatrice(R_A1, 4, 3);
+
+	error = matrixMultiplication(T, R_A1, T_RA1, 4, 4, 4, 3);
+	if (error != cudaSuccess) {
+		fprintf(stderr, "cudaMalloc failed!");
+		exit(0);
+	}
+	cout << "T* (R * A1) \n";
+	stampaMatrice(T_RA1, 4, 3);
+
+	error = matrixMultiplication(K, T_RA1, transformationvector, 4, 4, 4, 3);
+	if (error != cudaSuccess) {
+		fprintf(stderr, "cudaMalloc failed!");
+		exit(0);
+	}
+
+	cv::Mat tranf_mat(3,3,CV_32FC1);
+
+	cout << "stampo T \n";
+	stampaMatrice(transformationvector, 3, 3);
+
+
+	arrayToMat(tranf_mat,transformationvector,9);
+	//cout << "matrice di transformazione : \n" << tranf_mat << endl;
+
+	//DA ELIMINARE --- SOLO A SCOPO DI DEBUG
+	//output=input.clone();
+	warpPerspective(input, output, tranf_mat, input_size, INTER_CUBIC | WARP_INVERSE_MAP);
+
+	return;
 
 }
 
@@ -271,32 +280,32 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
 int main(int argc, char const *argv[]) {
 	
 	if(argc > 2) {
-      cerr << "Usage: " << argv[0] << " <' /path/to/video/ ' | nothing > " << endl;
-      cout << "Exiting...." << endl;
-      return -1;
-    }
-    int flag=0;
-    Mat image,output;
-    
+	  cerr << "Usage: " << argv[0] << " <' /path/to/video/ ' | nothing > " << endl;
+	  cout << "Exiting...." << endl;
+	  return -1;
+	}
+	int flag=0;
+	Mat image,output;
+	
 
-    VideoCapture capture;
+	VideoCapture capture;
 
-    if (argc == 1){
-        capture.open(0);
-    }else{
-        string filename = argv[1];
-        capture.open(filename);
-    }
+	if (argc == 1){
+		capture.open(0);
+	}else{
+		string filename = argv[1];
+		capture.open(filename);
+	}
 
-    if(!capture.isOpened()) throw "Error reading video";
+	if(!capture.isOpened()) throw "Error reading video";
 
-    
+	
 
-    /*
-        definisco i parametri e le trackbar
-    */
+	/*
+		definisco i parametri e le trackbar
+	*/
 
-    namedWindow("Result", 1);
+	namedWindow("Result", 1);
 
 	createTrackbar("Alpha", "Result", &alpha_, 180);
 	createTrackbar("Beta", "Result", &beta_, 180);
@@ -307,32 +316,32 @@ int main(int argc, char const *argv[]) {
 
 
 
-    cout << "Capture is opened" << endl;
-    for(;;)
-    {
-        capture >> image;
-        //stampo il tipo di immagine
-        if(flag == 0){
-            string ty = "CV_" + type2str( image.type() );
-            cout << "tipo matrice :" << ty.c_str() <<endl;
-            flag = 1;
-        }
-        resize(image, image,Size(FRAMEWIDTH, FRAMEHEIGHT));
+	cout << "Capture is opened" << endl;
+	for(;;)
+	{
+		capture >> image;
+		//stampo il tipo di immagine
+		if(flag == 0){
+			string ty = "CV_" + type2str( image.type() );
+			cout << "tipo matrice :" << ty.c_str() <<endl;
+			flag = 1;
+		}
+		resize(image, image,Size(FRAMEWIDTH, FRAMEHEIGHT));
 
-        if (CUDA){
-            CUDA_birdsEyeView(image, output);
-        }else{
-            birdsEyeView(image, output);
-        }
-        //per la visualizzazione 
-        if(output.empty())
-            break;
-        //drawText(image);
-        imshow("Result", output);
-        if(waitKey(10) >= 0)
-            break;
-    }
-    
-    
-    return 0;
+		if (CUDA){
+			CUDA_birdsEyeView(image, output);
+		}else{
+			birdsEyeView(image, output);
+		}
+		//per la visualizzazione 
+		if(output.empty())
+			break;
+		//drawText(image);
+		imshow("Result", output);
+		if(waitKey(10) >= 0)
+			break;
+	}
+	
+	
+	return 0;
 }
