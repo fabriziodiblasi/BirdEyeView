@@ -34,3 +34,6 @@ cudaError_t matrixMultiplication(float *A, float *B, float *C, int numARows,int 
 void arrayToMat(cv::Mat &mat, float *array, int numElem);
 
 void matToArray(float *array, cv::Mat &mat, int numElem);
+
+cv::Mat warpPerspectiveCPU(cv::Mat A, cv::Mat H);
+

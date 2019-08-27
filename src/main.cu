@@ -266,9 +266,10 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
 	arrayToMat(tranf_mat,transformationvector,9);
 	//cout << "matrice di transformazione : \n" << tranf_mat << endl;
 
-	//DA ELIMINARE --- SOLO A SCOPO DI DEBUG
-	//output=input.clone();
-	warpPerspective(input, output, tranf_mat, input_size, INTER_CUBIC | WARP_INVERSE_MAP);
+	
+	//warpPerspective(input, output, tranf_mat, input_size, INTER_CUBIC | WARP_INVERSE_MAP);
+
+	output = warpPerspectiveCPU(input, tranf_mat);
 
 	return;
 
