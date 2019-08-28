@@ -20,28 +20,28 @@ int f_ = 500, dist_ = 500;
 
 
 
-string type2str(int type) {
-	string r;
+// string type2str(int type) {
+// 	string r;
   
-	uchar depth = type & CV_MAT_DEPTH_MASK;
-	uchar chans = 1 + (type >> CV_CN_SHIFT);
+// 	uchar depth = type & CV_MAT_DEPTH_MASK;
+// 	uchar chans = 1 + (type >> CV_CN_SHIFT);
   
-	switch ( depth ) {
-	  case CV_8U:  r = "8U"; break;
-	  case CV_8S:  r = "8S"; break;
-	  case CV_16U: r = "16U"; break;
-	  case CV_16S: r = "16S"; break;
-	  case CV_32S: r = "32S"; break;
-	  case CV_32F: r = "32F"; break;
-	  case CV_64F: r = "64F"; break;
-	  default:     r = "User"; break;
-	}
+// 	switch ( depth ) {
+// 	  case CV_8U:  r = "8U"; break;
+// 	  case CV_8S:  r = "8S"; break;
+// 	  case CV_16U: r = "16U"; break;
+// 	  case CV_16S: r = "16S"; break;
+// 	  case CV_32S: r = "32S"; break;
+// 	  case CV_32F: r = "32F"; break;
+// 	  case CV_64F: r = "64F"; break;
+// 	  default:     r = "User"; break;
+// 	}
   
-	r += "C";
-	r += (chans+'0');
+// 	r += "C";
+// 	r += (chans+'0');
   
-	return r;
-}
+// 	return r;
+// }
 
 /*
 __global__ void rotation_multiply_kernel(float *d_RX,float *d_RY,float *d_R, int N){
@@ -105,7 +105,7 @@ void birdsEyeView(const Mat &input, Mat &output){
 
 	// R - rotation matrix
 	Mat R = RX * RY * RZ;
-	cout<< " R : \n "<< R << endl;
+	// cout<< " R : \n "<< R << endl;
 
 
 
@@ -123,11 +123,11 @@ void birdsEyeView(const Mat &input, Mat &output){
 		0, 0, 1, 0
 		); 
 
-	cout << "\n R * A1 :\n"<< R * A1 <<endl;
+	// cout << "\n R * A1 :\n"<< R * A1 <<endl;
 	
-	cout << "\n T * (R * A1) : \n"<< T * (R * A1) <<endl;	
+	// cout << "\n T * (R * A1) : \n"<< T * (R * A1) <<endl;	
 
-	cout << "\n K * (T * (R * A1)) : \n"<< K * (T * (R * A1)) <<endl;	
+	// cout << "\n K * (T * (R * A1)) : \n"<< K * (T * (R * A1)) <<endl;	
 
 	Mat transformationMat = K * (T * (R * A1));
 
@@ -215,8 +215,8 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
 		exit(0);
 	}
 	
-	cout << "stampo R \n";
-	stampaMatrice(R, 4, 4);
+	// cout << "stampo R \n";
+	// stampaMatrice(R, 4, 4);
 	
 	// T - translation matrix
 	float T[16] = { 
@@ -240,16 +240,16 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
 		fprintf(stderr, "cudaMalloc failed!");
 		exit(0);
 	}
-	cout << "R * A1 \n";
-	stampaMatrice(R_A1, 4, 3);
+	// cout << "R * A1 \n";
+	// stampaMatrice(R_A1, 4, 3);
 
 	error = matrixMultiplication(T, R_A1, T_RA1, 4, 4, 4, 3);
 	if (error != cudaSuccess) {
 		fprintf(stderr, "cudaMalloc failed!");
 		exit(0);
 	}
-	cout << "T* (R * A1) \n";
-	stampaMatrice(T_RA1, 4, 3);
+	// cout << "T* (R * A1) \n";
+	// stampaMatrice(T_RA1, 4, 3);
 
 	error = matrixMultiplication(K, T_RA1, transformationvector, 4, 4, 4, 3);
 	if (error != cudaSuccess) {
@@ -259,17 +259,17 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
 
 	cv::Mat tranf_mat(3,3,CV_32FC1);
 
-	cout << "stampo T \n";
-	stampaMatrice(transformationvector, 3, 3);
+	// cout << "stampo T \n";
+	// stampaMatrice(transformationvector, 3, 3);
 
 
 	arrayToMat(tranf_mat,transformationvector,9);
 	//cout << "matrice di transformazione : \n" << tranf_mat << endl;
 
 	
-	//warpPerspective(input, output, tranf_mat, input_size, INTER_CUBIC | WARP_INVERSE_MAP);
-
-	output = warpPerspectiveCPU(input, tranf_mat);
+	//output = warpPerspectiveCPU(input, tranf_mat);
+	cout << "richiamo la funzione warpPerspectiveCUDA \n";
+	warpPerspectiveCUDA(input, output, tranf_mat);
 
 	return;
 

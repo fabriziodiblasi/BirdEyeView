@@ -3,6 +3,35 @@
 using namespace std;
 using namespace cv;
 
+cudaError_t cudaStatus;
+
+
+string type2str(int type) {
+	string r;
+  
+	uchar depth = type & CV_MAT_DEPTH_MASK;
+	uchar chans = 1 + (type >> CV_CN_SHIFT);
+  
+	switch ( depth ) {
+	  case CV_8U:  r = "8U"; break;
+	  case CV_8S:  r = "8S"; break;
+	  case CV_16U: r = "16U"; break;
+	  case CV_16S: r = "16S"; break;
+	  case CV_32S: r = "32S"; break;
+	  case CV_32F: r = "32F"; break;
+	  case CV_64F: r = "64F"; break;
+	  default:     r = "User"; break;
+	}
+  
+	r += "C";
+	r += (chans+'0');
+  
+	return r;
+}
+
+
+
+
 void stampaMatrice(float *matrice, int rig, int col){
     //stampa a matrice
     for(int i = 0; i < rig; i++){
@@ -37,7 +66,7 @@ __global__ void generic_mat_mul(float *A, float *B, float *C, int numARows,int n
 */
 
 cudaError_t matrixMultiplication(float *A, float *B, float *C, int numARows,int numAColumns, int numBRows, int numBColumns){
-    cudaError_t cudaStatus;
+    
     //@@ Initialize the grid and block dimensions here
     dim3 blockDim(16, 16);
     dim3 gridDim(ceil(((float)numAColumns) / blockDim.x),ceil(((float)numBRows) / blockDim.y));
@@ -111,37 +140,33 @@ Error:
     
 }
 
+/**
+    * converte un vettore in un oggetto Mat
+    * src : array
+    * dst : Mat
+*/
 
-
-void arrayToMat(cv::Mat &mat, float *array, int numElem){
+void arrayToMat(cv::Mat &mat, const float *array, int numElem){
     memcpy(mat.ptr(),array,numElem * sizeof(float));
 }
 
-
-void matToArray(float *array, cv::Mat &mat, int numElem){
-    memcpy(array,mat.ptr(),numElem * sizeof(float));
+/**
+    * converte un oggetto Mat in un array
+    * src : Mat
+    * dst : array
+*/
+void matToArray(float *array, const cv::Mat &mat, int rig, int col){
+    memcpy(array, mat.ptr(), rig * col * sizeof(float));
+    /*for(int i = 0; i < rig; i++){
+        for(int j = 0; j < col; j++){
+            array[i * col + j] = mat.at<float>(i,j);
+            //cout << matrice[i * col + j] << "\t";
+        }
+//        cout<<"\n";
+    }
+//    cout<<"\n\n";
+    */
 }
-
-
-// implementazione manuale di
-
-//---------------------------- cv::warpPerspective() ---------------------------------------
-
-//  warpPerspective(InputArray src, OutputArray dst, InputArray M, Size dsize, int flags=INTER_LINEAR, int borderMode=BORDER_CONSTANT, const Scalar& borderValue=Scalar())
-
-// M è sempre 3 x 3 
-// dsize è la dimensione dell'immagine sorgente
-// cudaError_t warpPerspectiveCPU(float *src, float *dst, float *m, int numSrcRows,int numSrcColumns){
-    
-//     for(int i = 0; i < rig; i++){
-//         for(int j = 0; j < col; j++){
-            
-//             //cout << matrice[i * col + j] << "\t";
-//             dst[i * col *j] = src[i * col *j]
-//         }
-//         cout<<"\n";
-//     }
-// }
 
 
 // Mat A = immagine da traslare
@@ -159,19 +184,25 @@ Mat warpPerspectiveCPU(Mat A, Mat H){
     int *TransArry = (int *)malloc(sizeof(int)*size);
     int Idx;
 
-    int homeX=Idx % Numcols;
-    int homeY=Idx / Numcols;
+    int homeX, homeY;
+
+    // int homeX=Idx % Numcols;
+    // int homeY=Idx / Numcols;
     // cout << H << endl;
 
-    //waitKey();         
     for (Idx=0; Idx < size; ++Idx ){
 
         homeX=Idx % Numcols;
         homeY=Idx / Numcols;
 
-        float x  = (H.at<float>(0,0) * (homeX)) +( H.at<float>(0,1) * (homeY)) + ( H.at<float>(0,2) * 1) ;
-        float y  = (H.at<float>(1,0) * (homeX)) +( H.at<float>(1,1) * (homeY)) + ( H.at<float>(1,2) * 1) ;
-        float s  = (H.at<float>(2,0) * (homeX)) +( H.at<float>(2,1) * (homeY)) + ( H.at<float>(2,2) * 1) ;
+        // float x  = (H.at<float>(0,0) * (homeX)) +( H.at<float>(0,1) * (homeY)) + ( H.at<float>(0,2) * 1) ;
+        // float y  = (H.at<float>(1,0) * (homeX)) +( H.at<float>(1,1) * (homeY)) + ( H.at<float>(1,2) * 1) ;
+        // float s  = (H.at<float>(2,0) * (homeX)) +( H.at<float>(2,1) * (homeY)) + ( H.at<float>(2,2) * 1) ;
+
+        float x  = (H.at<float>(0,0) * (homeX)) +( H.at<float>(0,1) * (homeY)) +  H.at<float>(0,2) ;
+        float y  = (H.at<float>(1,0) * (homeX)) +( H.at<float>(1,1) * (homeY)) +  H.at<float>(1,2) ;
+        float s  = (H.at<float>(2,0) * (homeX)) +( H.at<float>(2,1) * (homeY)) +  H.at<float>(2,2) ;
+
 
         // cout << " x = " << x << " y= " << y << " s= " << s;
         x = floor(x/s);
@@ -189,7 +220,7 @@ Mat warpPerspectiveCPU(Mat A, Mat H){
             if (y > MaxY) MaxY = y;
             if (y < MinY) MinY = y;
         }
-        if((y)>=A.rows || (y)<0 || (x)>=A.cols || (x)<0){
+        if( y >= A.rows || y < 0 || x >= A.cols || x < 0){
             TransArry[Idx]  = -1;
             // cout << "x= " << x << "y= "<< y << endl;
         }else{
@@ -204,10 +235,7 @@ Mat warpPerspectiveCPU(Mat A, Mat H){
 
     A.copyTo(tranImg);
     tranImg = tranImg - tranImg;
-    // cout <<     "Rows" << tranImg.rows << "cols" << tranImg.cols << "cha" <<  A.channels() << endl;
-
-
-    //waitKey();
+    
     // Remap Image
     for (Idx=0; Idx < size; Idx ++ ){
 
@@ -243,4 +271,188 @@ Mat warpPerspectiveCPU(Mat A, Mat H){
     return tranImg;
 
 }
+
+
+// --------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------
+// -------------------------------------------------------- warping in cuda -------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+__global__ void calc_tranf_array(float *H, int *transfArray, int numARows, int numAColumns) {
+    //int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    int MaxX,MaxY = -1000;
+    int MinX,MinY =  1000;
+    
+    int homeX, homeY;
+    
+    //if (row < numARows && col < numAColumns) {
+    if (idx < numARows * numAColumns) {
+        homeX=idx % numAColumns;
+        homeY=idx / numAColumns;
+
+        float x  = (H[0] * (homeX)) +( H[1] * (homeY)) +  H[2] ;
+        float y  = (H[3] * (homeX)) +( H[4] * (homeY)) +  H[5] ;
+        float s  = (H[6] * (homeX)) +( H[7] * (homeY)) +  H[8] ;
+
+        // cout << " x = " << x << " y= " << y << " s= " << s;
+        x = floor(x/s);
+
+        y = floor(y/s);
+
+        // for the first col in TransMatrix
+        if (homeX == 0){
+            if (x > MaxX) MaxX = x;
+            if (x < MinX) MinX = x; 
+        }
+
+        //for thee first row in TransMatrix
+        if (homeY == 0){
+            if (y > MaxY) MaxY = y;
+            if (y < MinY) MinY = y;
+        }
+        if( y >= numARows || y<0 || x >= numAColumns ||  x < 0){
+            transfArray[idx]  = -1;
+            // cout << "x= " << x << "y= "<< y << endl;
+        }else{
+            transfArray[idx] = (y * numAColumns + x); 
+        }           
+    }
+}
+
+
+
+cudaError_t warpPerspectiveCUDA(Mat input, Mat &output, const Mat H){
+    // allocate array of all locations
+    int Numrows = input.rows;
+    int Numcols = input.cols;
+    int channels   = input.channels();
+    // cout << "rows " << Numrows << "col " << Numcols << "channels " << channels <<endl;
+    int size = Numrows*Numcols;
+    int MaxX,MaxY = -1000;
+    int MinX,MinY =  1000;
+    int *TransArry = (int *)malloc(sizeof(int)*size);
+    int Idx;
+    int homeX, homeY;
+
+    float *d_H;
+    float *vecH = (float *)malloc(sizeof(float) * H.rows * H.cols);
+    int *d_T;
+
+    Mat tranImg;
+    
+    cout <<" \n prima della copia della matrice H \n";
+    
+    cout << "tipo matrice H :" << "CV_" + type2str(H.type()) <<endl;
+
+    matToArray(vecH, H, H.rows, H.cols);
+
+    cout <<" \n DOPO della copia della matrice H \n";
+ 
+
+    cudaStatus = cudaMalloc((void **) &d_H, sizeof(float)*H.rows * H.cols);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        goto ErrorWarp;
+    }
+    
+    cudaStatus = cudaMalloc((void **) &d_T, sizeof(int) * size);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        goto ErrorWarp;
+    }
+    
+    cout <<" \n copio i vettori \n";
+
+    //copio i vettori
+    cudaStatus = cudaMemcpy(d_H,vecH,sizeof(float)*H.rows * H.cols,cudaMemcpyHostToDevice);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "CudaMemCpy failed: %s\n", cudaGetErrorString(cudaStatus));
+        goto ErrorWarp;
+    }
+    cudaStatus = cudaMemset(d_T, 0, sizeof(int) * size);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "CudaMemSetfailed: %s\n", cudaGetErrorString(cudaStatus));
+        goto ErrorWarp;
+    }
+    /*
+    dim3 blockDim(16, 16);
+    dim3 gridDim(ceil(((float)numAColumns) / blockDim.x),ceil(((float)numBRows) / blockDim.y));
+    */
+    //ceil(n/256.0),256
+    //dim3 DimGrid(ceil(size/256.0),1,1);
+    //dim3 DimBlock(256,1,1);
+
+    cout <<" \n richiamo il kernell \n";
+    calc_tranf_array<<<ceil(size/256.0),256>>>(d_H, d_T, input.rows, input.cols);
+    
+    cudaStatus = cudaGetLastError();
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "Kernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
+        goto ErrorWarp;
+    }
+
+    cout <<" \n copio il risultato del kernel \n";
+    cudaStatus = cudaMemcpy(TransArry,d_T,sizeof(int) * size,cudaMemcpyDeviceToHost);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "CudaMemCpy failed: %s\n", cudaGetErrorString(cudaStatus));
+        goto ErrorWarp;
+    }
+    
+
+    //input.copyTo(tranImg);
+    tranImg = input.clone();
+    tranImg = tranImg - tranImg;
+    
+    // Remap Image
+    for (Idx=0; Idx < size; Idx ++ ){
+
+        homeX=Idx % Numcols;
+        homeY=Idx / Numcols;                
+        //tranImg.at<uchar>(homeY, homeX) =0;
+        if(TransArry[Idx] != -1){   
+            //cout << "Index " << Idx << "Passed " << endl;
+            int newhomeX=TransArry[Idx] % Numcols; // Col ID
+            int newhomeY=TransArry[Idx] / Numcols;  // Row ID
+
+
+            // cout << "Index is " << Idx << endl;
+            // cout << "HomeX is " << homeX << " and HomeY is " << homeY << endl;
+            // cout << "New Index is " << TransArry[Idx] << endl;
+            // cout << "New HomeX is " << newhomeX << " and New HomeY is " << newhomeY << endl;   
+            // cout << "*****************************************"<< endl; 
+            // if (!(Idx%100)) sleep(20);  
+
+            tranImg.at<uchar>(newhomeY, (newhomeX*channels)) = input.at<uchar>(homeY, homeX*channels);
+            if(channels>1)
+                tranImg.at<uchar>(newhomeY, newhomeX*channels+1) = input.at<uchar>(homeY, homeX*channels+1);
+            if(channels>2)
+                tranImg.at<uchar>(newhomeY, newhomeX*channels+2) = input.at<uchar>(homeY, homeX*channels+2);
+            // if (!(Idx%100)){
+                // imshow("inside", tranImg);
+                // waitKey(1);
+                // }
+            }
+    }
+    //cout << tranImg << endl;  
+    
+    output = tranImg.clone();
+    //return tranImg;
+
+
+
+ErrorWarp:
+    //cout<< "****** ERRORE CUDA ****** : " << cudaStatus << endl;
+    cudaFree(d_H);
+    cudaFree(d_T);
+    
+    return cudaStatus;
+}
+
 
