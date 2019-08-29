@@ -11,7 +11,7 @@ using namespace cv;
 #define FRAMEWIDTH  640
 #define FRAMEHEIGHT 480
 
-bool CUDA = true;
+bool CUDA = false;
 
 
 // ---- GLOBAL VAR ----
@@ -267,8 +267,8 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
 	//cout << "matrice di transformazione : \n" << tranf_mat << endl;
 
 	
-	//output = warpPerspectiveCPU(input, tranf_mat);
-	cout << "richiamo la funzione warpPerspectiveCUDA \n";
+	// output = warpPerspectiveCPU(input, tranf_mat);
+	// cout << "richiamo la funzione warpPerspectiveCUDA \n";
 	warpPerspectiveCUDA(input, output, tranf_mat);
 
 	return;
@@ -330,9 +330,17 @@ int main(int argc, char const *argv[]) {
 		resize(image, image,Size(FRAMEWIDTH, FRAMEHEIGHT));
 
 		if (CUDA){
+			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 			CUDA_birdsEyeView(image, output);
+			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+			std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+			std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
 		}else{
+			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 			birdsEyeView(image, output);
+			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+			std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+			std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
 		}
 		//per la visualizzazione 
 		if(output.empty())

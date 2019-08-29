@@ -3,6 +3,9 @@
 #include<cstdio>
 #include <ctime>
 #include <cmath>
+#include <vector>
+#include <array>
+#include <chrono>
 #include "bits/time.h"
 
 //#include <opencv2/opencv.hpp>

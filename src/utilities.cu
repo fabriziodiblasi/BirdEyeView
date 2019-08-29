@@ -328,6 +328,9 @@ __global__ void calc_tranf_array(float *H, int *transfArray, int numARows, int n
 
 
 
+
+// lavora correttamente, manca la parralellizzazione dell'ultimo for
+
 cudaError_t warpPerspectiveCUDA(Mat input, Mat &output, const Mat H){
     // allocate array of all locations
     int Numrows = input.rows;
@@ -347,13 +350,13 @@ cudaError_t warpPerspectiveCUDA(Mat input, Mat &output, const Mat H){
 
     Mat tranImg;
     
-    cout <<" \n prima della copia della matrice H \n";
+    // cout <<" \n prima della copia della matrice H \n";
     
-    cout << "tipo matrice H :" << "CV_" + type2str(H.type()) <<endl;
+    // cout << "tipo matrice H :" << "CV_" + type2str(H.type()) <<endl;
 
     matToArray(vecH, H, H.rows, H.cols);
 
-    cout <<" \n DOPO della copia della matrice H \n";
+    // cout <<" \n DOPO della copia della matrice H \n";
  
 
     cudaStatus = cudaMalloc((void **) &d_H, sizeof(float)*H.rows * H.cols);
@@ -368,7 +371,7 @@ cudaError_t warpPerspectiveCUDA(Mat input, Mat &output, const Mat H){
         goto ErrorWarp;
     }
     
-    cout <<" \n copio i vettori \n";
+    // cout <<" \n copio i vettori \n";
 
     //copio i vettori
     cudaStatus = cudaMemcpy(d_H,vecH,sizeof(float)*H.rows * H.cols,cudaMemcpyHostToDevice);
@@ -381,15 +384,15 @@ cudaError_t warpPerspectiveCUDA(Mat input, Mat &output, const Mat H){
         fprintf(stderr, "CudaMemSetfailed: %s\n", cudaGetErrorString(cudaStatus));
         goto ErrorWarp;
     }
-    /*
-    dim3 blockDim(16, 16);
-    dim3 gridDim(ceil(((float)numAColumns) / blockDim.x),ceil(((float)numBRows) / blockDim.y));
-    */
+    // 
+    // dim3 blockDim(16, 16);
+    // dim3 gridDim(ceil(((float)numAColumns) / blockDim.x),ceil(((float)numBRows) / blockDim.y));
+    // 
     //ceil(n/256.0),256
     //dim3 DimGrid(ceil(size/256.0),1,1);
     //dim3 DimBlock(256,1,1);
 
-    cout <<" \n richiamo il kernell \n";
+    // cout <<" \n richiamo il kernell \n";
     calc_tranf_array<<<ceil(size/256.0),256>>>(d_H, d_T, input.rows, input.cols);
     
     cudaStatus = cudaGetLastError();
@@ -398,7 +401,7 @@ cudaError_t warpPerspectiveCUDA(Mat input, Mat &output, const Mat H){
         goto ErrorWarp;
     }
 
-    cout <<" \n copio il risultato del kernel \n";
+    // cout <<" \n copio il risultato del kernel \n";
     cudaStatus = cudaMemcpy(TransArry,d_T,sizeof(int) * size,cudaMemcpyDeviceToHost);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "CudaMemCpy failed: %s\n", cudaGetErrorString(cudaStatus));
@@ -454,5 +457,4 @@ ErrorWarp:
     
     return cudaStatus;
 }
-
 
