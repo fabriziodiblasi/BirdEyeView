@@ -280,8 +280,8 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
 
 int main(int argc, char const *argv[]) {
 	
-	if(argc > 2) {
-	  cerr << "Usage: " << argv[0] << " <' /path/to/video/ ' | nothing > " << endl;
+	if(argc > 3 || argc == 1) {
+	  cerr << "Usage: " << argv[0] << "< CUDA : y / n > <' /path/to/video/ ' | nothing > " << endl;
 	  cout << "Exiting...." << endl;
 	  return -1;
 	}
@@ -290,11 +290,21 @@ int main(int argc, char const *argv[]) {
 	
 
 	VideoCapture capture;
-
-	if (argc == 1){
-		capture.open(0);
+	string cudaflag = argv[1];
+	if (cudaflag == "y"){
+		CUDA = true;
+		cout<<"** CUDA ON ** \n";
 	}else{
-		string filename = argv[1];
+		CUDA = false;
+		cout<<"** CUDA OFF ** \n";
+		
+	}
+
+	if (argc == 2){
+		capture.open(0);
+	}
+	if (argc == 3){
+		string filename = argv[2];
 		capture.open(filename);
 	}
 
