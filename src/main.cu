@@ -20,47 +20,6 @@ int f_ = 500, dist_ = 500;
 
 
 
-// string type2str(int type) {
-// 	string r;
-  
-// 	uchar depth = type & CV_MAT_DEPTH_MASK;
-// 	uchar chans = 1 + (type >> CV_CN_SHIFT);
-  
-// 	switch ( depth ) {
-// 	  case CV_8U:  r = "8U"; break;
-// 	  case CV_8S:  r = "8S"; break;
-// 	  case CV_16U: r = "16U"; break;
-// 	  case CV_16S: r = "16S"; break;
-// 	  case CV_32S: r = "32S"; break;
-// 	  case CV_32F: r = "32F"; break;
-// 	  case CV_64F: r = "64F"; break;
-// 	  default:     r = "User"; break;
-// 	}
-  
-// 	r += "C";
-// 	r += (chans+'0');
-  
-// 	return r;
-// }
-
-/*
-__global__ void rotation_multiply_kernel(float *d_RX,float *d_RY,float *d_R, int N){
-	int ROW = blockIdx.y*blockDim.y+threadIdx.y;
-	int COL = blockIdx.x*blockDim.x+threadIdx.x;
-
-	float tmpSum = 0;
-
-	if (ROW < N && COL < N) {
-		// each thread computes one element of the block sub-matrix
-		for (int i = 0; i < N; i++) {
-			tmpSum += d_RX[ROW * N + i] * d_RY[i * N + COL];
-		}
-	}
-	d_R[ROW * N + COL] = tmpSum;
-
-}
-*/
-
 void birdsEyeView(const Mat &input, Mat &output){
 	double focalLength, dist, alpha, beta, gamma; 
 
@@ -162,11 +121,7 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
 
 	Size input_size = input.size();
 	double w = (double)input_size.width, h = (double)input_size.height;
-	/*
-	compito :
-	parallelizzare la funzione birdsEyeView
-	aggiungere il file che fa il prodotto tra matrici in cuda
-	*/
+	
 
 	float A1[12] = {
 		1, 0, -w/2,
@@ -264,14 +219,14 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
 
 
 	arrayToMat(tranf_mat,transformationvector,9);
-	//cout << "matrice di transformazione : \n" << tranf_mat << endl;
-
 	
-	// output = warpPerspectiveCPU(input, tranf_mat);
 	// cout << "richiamo la funzione warpPerspectiveCUDA \n";
-	warpPerspectiveCUDA(input, output, tranf_mat);
-
-	return;
+	
+	
+	// warpPerspectiveCUDA(input, output, tranf_mat);
+	warpPerspectiveRemappingCUDA(input, output, tranf_mat);
+	
+	 return;
 
 }
 
@@ -281,7 +236,7 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
 int main(int argc, char const *argv[]) {
 	
 	if(argc > 3 || argc == 1) {
-	  cerr << "Usage: " << argv[0] << "< CUDA : y / n > <' /path/to/video/ ' | nothing > " << endl;
+	  cerr << "Usage: " << argv[0] << " < CUDA : y / n > <' /path/to/video/ ' | nothing > " << endl;
 	  cout << "Exiting...." << endl;
 	  return -1;
 	}

@@ -171,6 +171,13 @@ void matToArray(float *array, const cv::Mat &mat, int rig, int col){
 
 // Mat A = immagine da traslare
 // Mat H = matrice di transformazione (3 X 3)
+// --------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------- warping in CPU con OpenCV -------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------
 
 Mat warpPerspectiveCPU(Mat A, Mat H){
     // allocate array of all locations
@@ -328,28 +335,13 @@ __global__ void calc_tranf_array(float *H, int *transfArray, int numARows, int n
 
 
 
-
-// lavora correttamente, manca la parralellizzazione dell'ultimo for
-
-cudaError_t warpPerspectiveCUDA(Mat input, Mat &output, const Mat H){
-    // allocate array of all locations
-    int Numrows = input.rows;
-    int Numcols = input.cols;
-    int channels   = input.channels();
-    // cout << "rows " << Numrows << "col " << Numcols << "channels " << channels <<endl;
-    int size = Numrows*Numcols;
-    int MaxX,MaxY = -1000;
-    int MinX,MinY =  1000;
-    int *TransArry = (int *)malloc(sizeof(int)*size);
-    int Idx;
-    int homeX, homeY;
-
+cudaError_t calculateTransferArray(Mat H, int *TransArry, int rows, int cols){
+    int size = rows * cols;
+    cudaError_t cudaStatus;
     float *d_H;
     float *vecH = (float *)malloc(sizeof(float) * H.rows * H.cols);
     int *d_T;
-
-    Mat tranImg;
-    
+   
     // cout <<" \n prima della copia della matrice H \n";
     
     // cout << "tipo matrice H :" << "CV_" + type2str(H.type()) <<endl;
@@ -393,7 +385,7 @@ cudaError_t warpPerspectiveCUDA(Mat input, Mat &output, const Mat H){
     //dim3 DimBlock(256,1,1);
 
     // cout <<" \n richiamo il kernell \n";
-    calc_tranf_array<<<ceil(size/256.0),256>>>(d_H, d_T, input.rows, input.cols);
+    calc_tranf_array<<<ceil(size/256.0),256>>>(d_H, d_T, rows, cols);
     
     cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
@@ -407,7 +399,40 @@ cudaError_t warpPerspectiveCUDA(Mat input, Mat &output, const Mat H){
         fprintf(stderr, "CudaMemCpy failed: %s\n", cudaGetErrorString(cudaStatus));
         goto ErrorWarp;
     }
+
+ErrorWarp:
+    //cout<< "****** ERRORE CUDA ****** : " << cudaStatus << endl;
+    cudaFree(d_H);
+    cudaFree(d_T);
     
+    return cudaStatus;
+    
+
+}
+
+
+
+
+
+// lavora correttamente, manca la parralellizzazione dell'ultimo for
+
+cudaError_t warpPerspectiveCUDA(Mat input, Mat &output, const Mat H){
+    // allocate array of all locations
+    int Numrows = input.rows;
+    int Numcols = input.cols;
+    int channels   = input.channels();
+    // cout << "rows " << Numrows << "col " << Numcols << "channels " << channels <<endl;
+    int size = Numrows*Numcols;
+    int MaxX,MaxY = -1000;
+    int MinX,MinY =  1000;
+    int *TransArry = (int *)malloc(sizeof(int)*size);
+    int Idx;
+    int homeX, homeY;
+    Mat tranImg;
+    
+        
+    calculateTransferArray(H,TransArry,Numrows, Numcols);
+
 
     //input.copyTo(tranImg);
     tranImg = input.clone();
@@ -423,14 +448,6 @@ cudaError_t warpPerspectiveCUDA(Mat input, Mat &output, const Mat H){
             //cout << "Index " << Idx << "Passed " << endl;
             int newhomeX=TransArry[Idx] % Numcols; // Col ID
             int newhomeY=TransArry[Idx] / Numcols;  // Row ID
-
-
-            // cout << "Index is " << Idx << endl;
-            // cout << "HomeX is " << homeX << " and HomeY is " << homeY << endl;
-            // cout << "New Index is " << TransArry[Idx] << endl;
-            // cout << "New HomeX is " << newhomeX << " and New HomeY is " << newhomeY << endl;   
-            // cout << "*****************************************"<< endl; 
-            // if (!(Idx%100)) sleep(20);  
 
             tranImg.at<uchar>(newhomeY, (newhomeX*channels)) = input.at<uchar>(homeY, homeX*channels);
             if(channels>1)
@@ -450,11 +467,6 @@ cudaError_t warpPerspectiveCUDA(Mat input, Mat &output, const Mat H){
 
 
 
-ErrorWarp:
-    //cout<< "****** ERRORE CUDA ****** : " << cudaStatus << endl;
-    cudaFree(d_H);
-    cudaFree(d_T);
-    
-    return cudaStatus;
+
 }
 

@@ -62,3 +62,7 @@ void matToArray(float *array, const cv::Mat &mat, int rig, int col);
 cv::Mat warpPerspectiveCPU(cv::Mat A, cv::Mat H);
 
 cudaError_t warpPerspectiveCUDA(cv::Mat input, cv::Mat &output, const cv::Mat H);
+
+cudaError_t warpPerspectiveRemappingCUDA(cv::Mat input, cv::Mat &output, const cv::Mat H);
+
+cudaError_t calculateTransferArray(cv::Mat H, int *TransArry, int rows, int cols);

@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/app.dir/src/app_generated_main.cu.o"
   "CMakeFiles/app.dir/src/app_generated_utilities.cu.o"
+  "CMakeFiles/app.dir/src/app_generated_cuda_remapping.cu.o"
   "app.pdb"
   "app"
 )
