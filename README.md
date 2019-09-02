@@ -11,7 +11,7 @@ $ cd Build
 $ cmake -D CMAKE_C_COMPILER=/usr/bin/gcc-6 ..
 $ make 
 
-Come eseguire l'applicazione
+Come eseguire l\'applicazione
 Utilizzando CUDA
 $ ./app y 
 or
