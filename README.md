@@ -10,6 +10,17 @@ $ mkdir Build
 $ cd Build
 $ cmake -D CMAKE_C_COMPILER=/usr/bin/gcc-6 ..
 $ make 
+
+Come eseguire l'applicazione
+Utilizzando CUDA
+$ ./app y 
+or
+$ ./app y <video path>
+
+Usando solamente direttive di OpenCV
+$ ./app n 
+or
+$ ./app n <video path>
 ```
 
 ## Install dependencies
