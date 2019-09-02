@@ -3,6 +3,8 @@
 using namespace std;
 using namespace cv;
 
+typedef unsigned char uchar;
+
 cudaError_t cudaStatus;
 
 

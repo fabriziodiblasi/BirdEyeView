@@ -2,6 +2,7 @@
 using namespace std;
 using namespace cv;
 
+typedef unsigned char uchar;
 
 vector<Mat> imageSplitting(Mat image){
      
@@ -18,17 +19,17 @@ vector<Mat> imageSplitting(Mat image){
 }
 
 
-void cvMatToVector(Mat mat, uint8_t *v){
+void cvMatToVector(Mat mat, uchar *v){
     cout << "cvMatToVector image :\n \t \ttipo matrice :" << "CV_" + type2str(mat.type()) <<endl;
 
-    std::vector<uint8_t> array;
+    std::vector<uchar> array;
     cout << "mat size : " << mat.rows * mat.cols <<"\n";
     
     if (mat.isContinuous()) {
         array.assign(mat.data, mat.data + mat.total());
     }else{
         for (int i = 0; i < mat.rows; ++i) {
-            array.insert(array.end(), mat.ptr<uint8_t>(i), mat.ptr<uint8_t>(i)+mat.cols);
+            array.insert(array.end(), mat.ptr<uchar>(i), mat.ptr<uchar>(i)+mat.cols);
         }
     }
     /*
@@ -41,7 +42,7 @@ void cvMatToVector(Mat mat, uint8_t *v){
     }
     */
 
-    v = (uint8_t *)malloc(sizeof(uint8_t)*array.size());
+    v = (uchar *)malloc(sizeof(uchar)*array.size());
     cout << "array size : " << array.size() <<endl;
     //getchar();
     for (int i = 0; i <array.size(); i++){
@@ -50,21 +51,45 @@ void cvMatToVector(Mat mat, uint8_t *v){
 
 }
 
-std::vector<uint8_t> multiChannelMatToVector(Mat mat){
-    std::vector<uint8_t> array;
+std::vector<uchar> multiChannelMatToVector(Mat mat){
+    std::vector<uchar> array;
     cout << "size : "<< mat.size() << " num canali : "<< mat.channels() << endl;
-
+    
     for(int rows = 0; rows < mat.rows; rows++){
         for(int cols = 0; cols < mat.cols * mat.channels(); cols++){
-            array.push_back(mat.at<uint8_t>(rows, cols));
+            array.push_back(mat.at<uchar>(rows, cols));
 
         }
     }
+    /*
+    if (mat.isContinuous()) {
+        array.assign(mat.data, mat.data + mat.total());
+    }else{
+        for (int i = 0; i < mat.rows; ++i) {
+            array.insert(array.end(), mat.ptr<uchar>(i), mat.ptr<uchar>(i)+mat.cols);
+        }
+    }
+    */
+    /*
+    cout << "\nmat.at<uchar>(0, 0) = " << (int) mat.at<uchar>(0, 0) 
+         << " mat.at<uchar>(0, 1) = " << (int) mat.at<uchar>(0, 1) 
+         << " mat.at<uchar>(0, 2) = " << (int) mat.at<uchar>(0, 2) << endl;
+    cout << "\n v[0] = " << (int) array[0] 
+         << " v[1] = " << (int) array[1]
+         << " v[2] = " << (int) array[2] << endl;
+
+    cout << "\nmat.at<uchar>(0, 3) = " << (int) mat.at<uchar>(0, 0) 
+         << " mat.at<uchar>(0, 4) = " << (int) mat.at<uchar>(0, 1) 
+         << " mat.at<uchar>(0, 5) = " << (int) mat.at<uchar>(0, 2) << endl;
+    cout << "\n v[3] = " << (int) array[0] 
+         << " v[4] = " << (int) array[1]
+         << " v[5] = " << (int) array[2] << endl;
+    */
     return array;
 }
 
-void stdVectorToArray(std::vector<uint8_t> &input, uint8_t *out){
-    //out = (uint8_t *)malloc(sizeof(uint8_t)*input.size());
+void stdVectorToArray(std::vector<uchar> &input, uchar *out){
+    //out = (uchar *)malloc(sizeof(uchar)*input.size());
     cout << " elementi del vettore : "<< input.size() << endl;
     for(int i = 0; i < input.size(); i++){
         out[i] = input[i];
@@ -73,7 +98,7 @@ void stdVectorToArray(std::vector<uint8_t> &input, uint8_t *out){
 
 
 
-__global__ void remapping_single_ch_image_cuda_kernel(uint8_t *image, int numRows, int numCols, int *tranfArray, int numChannel, uint8_t *output){
+__global__ void remapping_single_ch_image_cuda_kernel(uchar *image, int numRows, int numCols, int *tranfArray, int numChannel, uchar *output){
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     int idx = row * numCols + col;
@@ -83,7 +108,8 @@ __global__ void remapping_single_ch_image_cuda_kernel(uint8_t *image, int numRow
     //if (col < numCols && row < numRows){
         homeX=idx % numCols;
         homeY=idx / numCols; 
-        if(tranfArray[idx] != -1 && (homeY * numCols + homeX) < (numCols * numRows)){   
+        if(tranfArray[idx] != -1 ){  
+        //if(tranfArray[idx] != -1 && (homeY * numCols + homeX) < (numCols * numRows)){   
             //cout << "Index " << Idx << "Passed " << endl;
             newhomeX = tranfArray[idx] % numCols; // Col ID
             newhomeY = tranfArray[idx] / numCols;  // Row ID
@@ -118,28 +144,35 @@ __global__ void remapping_single_ch_image_cuda_kernel(uint8_t *image, int numRow
 }
 
 
-__global__ void remapping_multi_ch_image_cuda_kernel(uint8_t *image, int numRows, int numCols, int *tranfArray, int numChannel, uint8_t *output){
+__global__ void remapping_multi_ch_image_cuda_kernel(uchar *image, int numRows, int numCols, int *tranfArray, int numChannel, uchar *output){
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
+    
     int idx = row * numCols + col;
     int homeX, homeY;
     int newhomeX, newhomeY;
+    //if (idx < numCols * numRows){
     if (idx < numCols * numRows){
-    //if (col < numCols && row < numRows){
+    //if (col < numCols*numChannel && row < numRows){
         homeX=idx % numCols;
         homeY=idx / numCols; 
-        if(tranfArray[idx] != -1 && (homeY * numCols + homeX) < (numCols * numRows)){   
+        if(tranfArray[idx] != -1 ){   
             //cout << "Index " << Idx << "Passed " << endl;
             newhomeX = tranfArray[idx] % numCols; // Col ID
             newhomeY = tranfArray[idx] / numCols;  // Row ID
 
             //i * col + j
             output[newhomeY * numCols + newhomeX] = image [homeY * numCols + homeX]; // B
-            output[newhomeY * numCols + newhomeX + 1] = image [homeY * numCols + homeX + 1]; // G
-            output[newhomeY * numCols + newhomeX + 2] = image [homeY * numCols + homeX + 2]; // R
+            
+            if(numChannel > 1)
+                output[(newhomeY * numCols) + (newhomeX * numChannel + 1)] = image [(homeY * numCols) + (homeX * numChannel + 1)]; // G
+            if(numChannel > 2)
+                output[(newhomeY * numCols) + (newhomeX * numChannel + 2)] = image [(homeY * numCols) + (homeX * numChannel + 2)]; // R
             
         }
     }
+    
+
 }
 
 
@@ -161,19 +194,19 @@ cv::Mat remappingSingleChannelImage(Mat image, int *tranfArray){
 	cout << "Remapping image :\n \t \ttipo matrice :" << "CV_" + type2str(image.type()) <<endl;
 
     //cout <<"\n (float *)malloc(sizeof(float)*size) ";
-    uint8_t *h_image = (uint8_t *)malloc(sizeof(uint8_t)*size);
+    uchar *h_image = (uchar *)malloc(sizeof(uchar)*size);
     
-    uint8_t *d_image, *d_output;
+    uchar *d_image, *d_output;
 
     int *d_tranfArray;
     cout <<" \n alloco il vettore sul device per l'immagine \n";
-    cudaStatus = cudaMalloc((void **) &d_image, sizeof(uint8_t) * size);
+    cudaStatus = cudaMalloc((void **) &d_image, sizeof(uchar) * size);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMalloc failed!");
         goto ErrorRemapping;
     }
     cout <<" \n alloco il vettore immagine per l'output\n";
-    cudaStatus = cudaMalloc((void **) &d_output, sizeof(uint8_t) * size);
+    cudaStatus = cudaMalloc((void **) &d_output, sizeof(uchar) * size);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMalloc failed!");
         goto ErrorRemapping;
@@ -186,12 +219,12 @@ cv::Mat remappingSingleChannelImage(Mat image, int *tranfArray){
     }
 
     //matToArray(h_image, image, image.rows, image.cols);
-    //std::memcpy( h_image,img.data, size*sizeof(uint8_t));
+    //std::memcpy( h_image,img.data, size*sizeof(uchar));
     cvMatToVector(img, h_image);
 
 
     //copio i vettori
-    cudaStatus = cudaMemcpy(d_image,h_image,sizeof(uint8_t) * size, cudaMemcpyHostToDevice);
+    cudaStatus = cudaMemcpy(d_image,h_image,sizeof(uchar) * size, cudaMemcpyHostToDevice);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "CudaMemCpy failed: %s\n", cudaGetErrorString(cudaStatus));
         goto ErrorRemapping;
@@ -208,8 +241,9 @@ cv::Mat remappingSingleChannelImage(Mat image, int *tranfArray){
     //__global__ void remapping_image_cuda_kernel(float *image, int numRows, int numCols, int *tranfArray, int numChannel, float *output){
     cout<<"\n RICHIAMO IL KERNELL PER IL REMAPPING DELL'IMMAGINE \n";
     //   <<<gridDim, blockDim>>>
-    remapping_single_ch_image_cuda_kernel<<<ceil(size/256.0),256>>>(d_image, image.rows, image.cols, d_tranfArray, image.channels(),d_output);
-
+    //remapping_single_ch_image_cuda_kernel<<<ceil(size/256.0),256>>>(d_image, image.rows, image.cols, d_tranfArray, image.channels(),d_output);
+    remapping_single_ch_image_cuda_kernel<<<gridDim, blockDim>>>(d_image, image.rows, image.cols, d_tranfArray, image.channels(),d_output);
+    
     cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "Kernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
@@ -217,7 +251,7 @@ cv::Mat remappingSingleChannelImage(Mat image, int *tranfArray){
     }
 
     cout <<" \n copio il risultato del kernel \n";
-    cudaStatus = cudaMemcpy(h_image,d_output,sizeof(uint8_t) * size,cudaMemcpyDeviceToHost);
+    cudaStatus = cudaMemcpy(h_image,d_output,sizeof(uchar) * size,cudaMemcpyDeviceToHost);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "CudaMemCpy failed: %s\n", cudaGetErrorString(cudaStatus));
         goto ErrorRemapping;
@@ -230,7 +264,7 @@ cv::Mat remappingSingleChannelImage(Mat image, int *tranfArray){
     cout <<" \n copio il risultato del kernel nell'oggetto mat\n";
     //arrayToMat(img, h_image, size);
     //memcpy(img.data())
-    std::memcpy(img.data, h_image, size*sizeof(uint8_t));
+    std::memcpy(img.data, h_image, size*sizeof(uchar));
     cout <<" \n finita la copia \n";
 
     return img;
@@ -259,15 +293,15 @@ cv::Mat remappingMultiChannelImage(Mat image, int *tranfArray){
     // img = image.clone();
 	cout << "Remapping image :\n \t \ttipo matrice :" << "CV_" + type2str(image.type()) <<endl;
      
-    uint8_t *d_image, *d_output;
+    uchar *d_image, *d_output;
     int *d_tranfArray;
-    vector<uint8_t> image_array;
+    vector<uchar> image_array;
 
     image_array = multiChannelMatToVector(img);
     //conto il numero di elementi totali
     num_RGBelem = image_array.size();
 
-    uint8_t *h_image = (uint8_t *)malloc(sizeof(uint8_t)*num_RGBelem);
+    uchar *h_image = (uchar *)malloc(sizeof(uchar)*num_RGBelem);
     
     cout << "num_RGBelem : "<< num_RGBelem << endl;
 
@@ -275,13 +309,13 @@ cv::Mat remappingMultiChannelImage(Mat image, int *tranfArray){
 
     // alloco la memoria sulla GPU
     //cout <<" \n alloco il vettore sul device per l'immagine \n";
-    cudaStatus = cudaMalloc((void **) &d_image, sizeof(uint8_t) * num_RGBelem);
+    cudaStatus = cudaMalloc((void **) &d_image, sizeof(uchar) * num_RGBelem);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMalloc failed!");
         goto ErrorMultiRemapping;
     }
     //cout <<" \n alloco il vettore immagine per l'output\n";
-    cudaStatus = cudaMalloc((void **) &d_output, sizeof(uint8_t) * num_RGBelem);
+    cudaStatus = cudaMalloc((void **) &d_output, sizeof(uchar) * num_RGBelem);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMalloc failed!");
         goto ErrorMultiRemapping;
@@ -299,7 +333,7 @@ cv::Mat remappingMultiChannelImage(Mat image, int *tranfArray){
     //copio i dati sulla GPU
 
     //copio i vettori
-    cudaStatus = cudaMemcpy(d_image,h_image,sizeof(uint8_t) * num_RGBelem, cudaMemcpyHostToDevice);
+    cudaStatus = cudaMemcpy(d_image,h_image,sizeof(uchar) * num_RGBelem, cudaMemcpyHostToDevice);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "CudaMemCpy failed: %s\n", cudaGetErrorString(cudaStatus));
         goto ErrorMultiRemapping;
@@ -312,8 +346,9 @@ cv::Mat remappingMultiChannelImage(Mat image, int *tranfArray){
     }
 
     // richiamo il cuda kernel
-
-    remapping_multi_ch_image_cuda_kernel<<<ceil(num_RGBelem/256.0),256>>>(d_image, image.rows, image.cols * image.channels(), d_tranfArray, image.channels(),d_output);
+    remapping_multi_ch_image_cuda_kernel<<<gridDim,blockDim>>>(d_image, image.rows, image.cols , d_tranfArray, image.channels(),d_output);
+    //remapping_multi_ch_image_cuda_kernel<<<ceil((float)(num_RGBelem/256.0)),256>>>(d_image, image.rows, image.cols , d_tranfArray, image.channels(),d_output);
+    //remapping_multi_ch_image_cuda_kernel<<<ceil(num_RGBelem/256.0),256>>>(d_image, image.rows, image.cols * image.channels(), d_tranfArray, image.channels(),d_output);
 
     cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
@@ -322,7 +357,7 @@ cv::Mat remappingMultiChannelImage(Mat image, int *tranfArray){
     }
 
     cout <<" \n copio il risultato del kernel \n";
-    cudaStatus = cudaMemcpy(h_image,d_output,sizeof(uint8_t) * num_RGBelem,cudaMemcpyDeviceToHost);
+    cudaStatus = cudaMemcpy(h_image,d_output,sizeof(uchar) * num_RGBelem,cudaMemcpyDeviceToHost);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "CudaMemCpy failed: %s\n", cudaGetErrorString(cudaStatus));
         goto ErrorMultiRemapping;
@@ -335,7 +370,7 @@ cv::Mat remappingMultiChannelImage(Mat image, int *tranfArray){
     cout <<" \n copio il risultato del kernel nell'oggetto mat\n";
     //arrayToMat(img, h_image, size);
     //memcpy(img.data())
-    std::memcpy(img.data, h_image, num_RGBelem*sizeof(uint8_t));
+    memcpy(img.data, h_image, num_RGBelem*sizeof(uchar));
     cout <<" \n finita la copia \n";
 
     return img;
@@ -388,9 +423,9 @@ cudaError_t warpPerspectiveRemappingCUDA(Mat input, Mat &output, const Mat H){
     cout <<" \n richiamo la funzione per il remapping \n";
     cout <<" \n NUMERO DI CANALI : " << input.channels() << "\n";
     
-/*
-    single channel img
 
+    //single channel img
+    /*
     vector<Mat> splitImg = imageSplitting(input);
     // getchar();
     // Mat merged;
@@ -409,7 +444,7 @@ cudaError_t warpPerspectiveRemappingCUDA(Mat input, Mat &output, const Mat H){
     result.push_back(remappingSingleChannelImage(splitImg[2], TransArry));
 
     merge(result,output);
-*/
+    */
     
     output = remappingMultiChannelImage(input, TransArry);
     

@@ -223,10 +223,10 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
 	// cout << "richiamo la funzione warpPerspectiveCUDA \n";
 	
 	
-	// warpPerspectiveCUDA(input, output, tranf_mat);
-	warpPerspectiveRemappingCUDA(input, output, tranf_mat);
+	warpPerspectiveCUDA(input, output, tranf_mat);
+	//warpPerspectiveRemappingCUDA(input, output, tranf_mat);
 	
-	 return;
+	return;
 
 }
 
