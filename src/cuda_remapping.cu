@@ -390,50 +390,51 @@ ErrorMultiRemapping:
 __global__ void new_remapping_kernel(cv::cuda::PtrStepSz<uchar3> src, int numRows, int numCols, size_t step, int numChannel, int *tranfArray, cv::cuda::PtrStepSz<uchar3> out){
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
-    
-    int idx = row * numCols + col;
+    int size = numRows * numCols;
+    int idx;
     int homeX, homeY;
     int newhomeX, newhomeY;
-    int iStep = step / sizeof(uchar3);
-    int oStep = step / sizeof(uchar3);
+    //int iStep = step / sizeof(uchar3);
+    //int oStep = step / sizeof(uchar3);
     uchar3 pxval;
-
-
-    if ((row < numRows) && (col < numCols))
+    //uchar3 srcval, outval;
+    //vector<float> result(3, 0);
+    idx = row * numCols + col;
+    //if ((row < numRows) && (col < numCols))
+    if (idx < numRows *numCols)
     {
         // azzero il pixell attuale
         // uchar * px = out + (row * step);
         // px[col] = 0; px[col+1] = 0; px[col+1] = 0;
-
+        // pxval.x = pxval.y = pxval.z = 0;
+        // out(row,col) = pxval;  
+        
         homeX=idx % numCols;
         homeY=idx / numCols; 
         if(tranfArray[idx] != -1 ){ 
             newhomeX = tranfArray[idx] % numCols; // Col ID
             newhomeY = tranfArray[idx] / numCols;  // Row ID
-            //uchar *outrowptr = out + newhomeY * step;
-            //uchar *srcrowptr = src + homeY * step;
-            
-            // outrowptr[newhomeX] = srcrowptr[homeX];
-            // out(newhomeY, newhomeX*numChannel) = src(homeY, homeX*numChannel);
-            // out(newhomeY, newhomeX) = src(homeY, homeX);
+            //srcval = src(homeY, homeX*numChannel);
+
             pxval = src(homeY, homeX );
-            out(newhomeY, newhomeX) = pxval;
+            out(newhomeY, newhomeX ) = pxval;
             
+            /*
             if (numChannel > 1){
-                pxval = src(homeY, homeX  + 1);
+                pxval = src(homeY, homeX   + 1);
                 out(newhomeY, newhomeX  + 1) = pxval;
             }
             
             if (numChannel > 2){
-                // outrowptr[newhomeX * numChannel + 2] = srcrowptr[homeX * numChannel + 2];
-                // outrowptr[newhomeX + 2] = srcrowptr[homeX + 2];
-                // out(newhomeY, newhomeX*numChannel + 2) = src(homeY, homeX*numChannel+2);
-                // out(newhomeY, newhomeX + 2) = src(homeY, homeX + 2);
-                pxval = src(homeY, homeX  +2);
+                pxval = src(homeY, homeX   +2);
                 out(newhomeY, newhomeX  + 2) = pxval;
+                
             }
+            */
+
+            
         }
-    
+        
 
     }
 }
@@ -453,12 +454,14 @@ cv::Mat remappingMultiChannelImage(Mat image, int *tranfArray){
     int *d_tranfArray;
     // vector<uchar> image_array;
 
+    
     //definisco l'immagine 
     cv::cuda::GpuMat input, output;
     input.upload(image);
     //output.create(cv::Size(image.rows, image.cols), CV_8UC3);
-    //output = input.clone();
-    output.upload(null_mat);
+    output = input.clone();
+    output.setTo(Scalar::all(0));
+    //output.upload(null_mat);
     //cout << "Remapping image :\n \t \ttipo matrice :" << "CV_" + type2str(input.type()) <<endl;
 
     //cout <<" \n alloco il vettore di transposizione \n";
