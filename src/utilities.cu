@@ -113,7 +113,7 @@ cudaError_t matrixMultiplication(float *A, float *B, float *C, int numARows,int 
     cudaMemset(d_C, 0, numARows * numBColumns * sizeof(float));
 
     generic_mat_mul<<<gridDim, blockDim>>>(d_A, d_B, d_C, numARows, numAColumns, numBRows, numBColumns);
-    
+    cudaThreadSynchronize();
     cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "Kernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
@@ -388,7 +388,7 @@ cudaError_t calculateTransferArray(Mat H, int *TransArry, int rows, int cols){
 
     // cout <<" \n richiamo il kernell \n";
     calc_tranf_array<<<ceil(size/256.0),256>>>(d_H, d_T, rows, cols);
-    
+    cudaThreadSynchronize();
     cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "Kernel launch failed: %s\n", cudaGetErrorString(cudaStatus));

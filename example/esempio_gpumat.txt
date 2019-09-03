@@ -1,0 +1,76 @@
+__global__ void kernel(uchar* src, int rows, int cols, size_t step)
+{
+    int rowInd = blockIdx.y * blockDim.y + threadIdx.y;
+    int colInd = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if ((rowInd < rows) && (colInd < cols))
+    {
+        uchar * rowptr = src + (rowInd * step);
+        rowptr[colInd] = 255;
+    }
+
+}
+
+void invoke_kernel(cv::cuda::GpuMat _img)
+{
+    dim3 tpb(50, 50);
+    dim3 bpg(((_img.cols + 49) / 50), ((_img.rows + 49)/ 50));
+    kernel<<<bpg, tpb>>> (_img.data, _img.rows, _img.cols, _img.step);
+
+}
+
+int main()
+{
+
+
+    cv::cuda::GpuMat mat;
+    mat.create(cv::Size(500, 500), CV_8UC1);
+    std::cout << mat.rows << " " << mat.cols << std::endl;
+    invoke_kernel(mat);
+
+    cv::Mat img;
+    mat.download(img);
+
+    cv::namedWindow("test");
+    cv::imshow("test", img);
+    cv::waitKey(0);
+
+    return 0;
+}
+
+
+
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+
+__global__ void inRange_kernel(const cv::cuda::PtrStepSz<uchar3> src, cv::cuda::PtrStepSzb dst,
+                               int lbc0, int ubc0, int lbc1, int ubc1, int lbc2, int ubc2) {
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+  if (x >= src.cols || y >= src.rows) return;
+
+  uchar3 v = src(y, x);
+  if (v.x >= lbc0 && v.x <= ubc0 && v.y >= lbc1 && v.y <= ubc1 && v.z >= lbc2 && v.z <= ubc2)
+    dst(y, x) = 255;
+  else
+    dst(y, x) = 0;
+}
+
+void inRange_gpu(cv::cuda::GpuMat &src, cv::Scalar &lowerb, cv::Scalar &upperb,
+                 cv::cuda::GpuMat &dst) {
+  const int m = 32;
+  int numRows = src.rows, numCols = src.cols;
+  if (numRows == 0 || numCols == 0) return;
+  // Attention! Cols Vs. Rows are reversed
+  const dim3 gridSize(ceil((float)numCols / m), ceil((float)numRows / m), 1);
+  const dim3 blockSize(m, m, 1);
+
+  inRange_kernel<<<gridSize, blockSize>>>(src, dst, lowerb[0], upperb[0], lowerb[1], upperb[1],
+                                          lowerb[2], upperb[2]);
+}
