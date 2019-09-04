@@ -478,7 +478,7 @@ cv::Mat remappingMultiChannelImage(Mat image, int *tranfArray){
         goto ErrorNewMultiRemapping;
     }
     
-    cout << "\n step / sizeof(uchar3) = " << ( int )input.step / sizeof(uchar3) << endl;
+    //cout << "\n step / sizeof(uchar3) = " << ( int )input.step / sizeof(uchar3) << endl;
 
     new_remapping_kernel<<<gridDim,blockDim>>> (input, input.rows, input.cols, input.step, image.channels(), d_tranfArray, output);
     cudaThreadSynchronize();
