@@ -37,7 +37,7 @@ sudo apt-get install yasm
 
 ```bash
 sudo ubuntu-drivers devices
-sudo ubuntu-drivers devices autoinstall
+sudo ubuntu-drivers autoinstall
 sudo apt-get install nvidia-cuda-toolkit
 ```
 
