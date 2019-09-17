@@ -66,9 +66,10 @@ __global__ void generic_mat_mul(float *A, float *B, float *C, int numARows,int n
     A * B = C
     N = numero di colonne
 */
+std::ofstream os_matmul;
 
 cudaError_t matrixMultiplication(float *A, float *B, float *C, int numARows,int numAColumns, int numBRows, int numBColumns){
-    
+    std::chrono::steady_clock::time_point begin, end;
     //@@ Initialize the grid and block dimensions here
     dim3 blockDim(16, 16);
     dim3 gridDim(ceil(((float)numAColumns) / blockDim.x),ceil(((float)numBRows) / blockDim.y));
@@ -104,6 +105,15 @@ cudaError_t matrixMultiplication(float *A, float *B, float *C, int numARows,int 
     }
     
     //copio i vettori
+    /*
+    cudaEvent_t start, stop;
+    float time;
+    cudaEventCreate (&start);
+    cudaEventCreate (&stop);
+    cudaEventRecord (start, 0);
+    */
+    os_matmul.open("tempi_cudamemcpy_matmul2.txt", std::ofstream::out | std::ofstream::app);
+    begin = std::chrono::steady_clock::now();
     cudaMemcpy(d_A,A,sizeof(float)*numARows*numAColumns,cudaMemcpyHostToDevice);
     
     cudaMemcpy(d_B,B,sizeof(float)*numBRows*numBColumns,cudaMemcpyHostToDevice);
@@ -111,6 +121,20 @@ cudaError_t matrixMultiplication(float *A, float *B, float *C, int numARows,int 
    
 
     cudaMemset(d_C, 0, numARows * numBColumns * sizeof(float));
+    end = std::chrono::steady_clock::now();
+    os_matmul << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<"\n";
+    os_matmul.close();
+    /*
+    cudaEventRecord (stop, 0);
+    cudaEventSynchronize (stop);
+    cudaEventElapsedTime (&time, start, stop);
+    // return value is expressed in milliseconds (with resolution of 0.5 us)
+    os_matmul << time << "\n";
+    os_matmul.close();
+    cudaEventDestroy (start);
+    cudaEventDestroy (stop);
+    */
+
 
     generic_mat_mul<<<gridDim, blockDim>>>(d_A, d_B, d_C, numARows, numAColumns, numBRows, numBColumns);
     cudaThreadSynchronize();
@@ -134,6 +158,10 @@ cudaError_t matrixMultiplication(float *A, float *B, float *C, int numARows,int 
         goto Error;
     }
     //@@ Free the GPU memory here
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+    return cudaStatus;
 Error:
     cudaFree(d_A);
     cudaFree(d_B);
