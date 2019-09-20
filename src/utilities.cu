@@ -112,18 +112,19 @@ cudaError_t matrixMultiplication(float *A, float *B, float *C, int numARows,int 
     cudaEventCreate (&stop);
     cudaEventRecord (start, 0);
     */
-    os_matmul.open("tempi_cudamemcpy_matmul2.txt", std::ofstream::out | std::ofstream::app);
-    begin = std::chrono::steady_clock::now();
+    //os_matmul.open("tempi_cudamemcpy_matmul2.txt", std::ofstream::out | std::ofstream::app);
+    //begin = std::chrono::steady_clock::now();
     cudaMemcpy(d_A,A,sizeof(float)*numARows*numAColumns,cudaMemcpyHostToDevice);
     
     cudaMemcpy(d_B,B,sizeof(float)*numBRows*numBColumns,cudaMemcpyHostToDevice);
     
    
 
-    cudaMemset(d_C, 0, numARows * numBColumns * sizeof(float));
-    end = std::chrono::steady_clock::now();
-    os_matmul << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<"\n";
-    os_matmul.close();
+    // cudaMemset(d_C, 0, numARows * numBColumns * sizeof(float));
+    // end = std::chrono::steady_clock::now();
+    // os_matmul << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<"\n";
+    // os_matmul.close();
+    
     /*
     cudaEventRecord (stop, 0);
     cudaEventSynchronize (stop);
@@ -137,12 +138,12 @@ cudaError_t matrixMultiplication(float *A, float *B, float *C, int numARows,int 
 
 
     generic_mat_mul<<<gridDim, blockDim>>>(d_A, d_B, d_C, numARows, numAColumns, numBRows, numBColumns);
-    cudaThreadSynchronize();
-    cudaStatus = cudaGetLastError();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "Kernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
-        goto Error;
-    }
+    // cudaThreadSynchronize();
+    // cudaStatus = cudaGetLastError();
+    // if (cudaStatus != cudaSuccess) {
+    //     fprintf(stderr, "Kernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
+    //     goto Error;
+    // }
     
     // cudaDeviceSynchronize waits for the kernel to finish, and returns
     // any errors encountered during the launch.
@@ -415,8 +416,8 @@ cudaError_t calculateTransferArray(Mat H, int *TransArry, int rows, int cols){
     //dim3 DimBlock(256,1,1);
 
     // cout <<" \n richiamo il kernell \n";
-    calc_tranf_array<<<ceil(size/256.0),256>>>(d_H, d_T, rows, cols);
-    cudaThreadSynchronize();
+    calc_tranf_array<<<ceil(size/1024.0),1024>>>(d_H, d_T, rows, cols);
+    cudaDeviceSynchronize();
     cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "Kernel launch failed: %s\n", cudaGetErrorString(cudaStatus));

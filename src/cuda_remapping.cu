@@ -171,8 +171,8 @@ cv::Mat remappingMultiChannelImage(Mat image, int *tranfArray){
     cudaEventCreate (&stop);
     cudaEventRecord (start, 0);
     */
-    os_remapping.open("tempi_cudamemcpy_remapping2.txt", std::ofstream::out | std::ofstream::app);
-    begin = std::chrono::steady_clock::now();
+    // os_remapping.open("tempi_cudamemcpy_remapping2.txt", std::ofstream::out | std::ofstream::app);
+    // begin = std::chrono::steady_clock::now();
 
     //cout <<" \n copio il vettore di transposizione \n";
     cudaStatus = cudaMemcpy(d_tranfArray,tranfArray,sizeof(int) * size, cudaMemcpyHostToDevice);
@@ -180,9 +180,9 @@ cv::Mat remappingMultiChannelImage(Mat image, int *tranfArray){
         fprintf(stderr, "CudaMemSetfailed: %s\n", cudaGetErrorString(cudaStatus));
         goto ErrorNewMultiRemapping;
     }
-    end = std::chrono::steady_clock::now();
-    os_remapping << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<"\n";
-    os_remapping.close();
+    // end = std::chrono::steady_clock::now();
+    // os_remapping << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<"\n";
+    // os_remapping.close();
     /*
     cudaEventRecord (stop, 0);
     cudaEventSynchronize (stop);
@@ -196,7 +196,7 @@ cv::Mat remappingMultiChannelImage(Mat image, int *tranfArray){
     //cout << "\n step / sizeof(uchar3) = " << ( int )input.step / sizeof(uchar3) << endl;
 
     new_remapping_kernel<<<gridDim,blockDim>>> (input, input.rows, input.cols, input.step, image.channels(), d_tranfArray, output);
-    cudaThreadSynchronize();
+    cudaDeviceSynchronize();
     
     output.download(img);
 
