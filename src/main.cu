@@ -300,24 +300,22 @@ int main(int argc, char const *argv[]) {
 		resize(image, image,Size(FRAMEWIDTH, FRAMEHEIGHT));
 
 		if (CUDA){
-			os_cuda.open("misurazioniCUDA.txt", std::ofstream::out | std::ofstream::app);
-			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+			// os_cuda.open("misurazioniCUDA.txt", std::ofstream::out | std::ofstream::app);
+			// std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 			CUDA_birdsEyeView(image, output);
-			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-			std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " [µs]" << std::endl;
-			//std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << " [ns]" << std::endl;
-			os_cuda << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<"\n";
-			os_cuda.close();
+			// std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+			// std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " [µs]" << std::endl;
+			// os_cuda << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<"\n";
+			// os_cuda.close();
 
 		}else{
-			os_opencv.open("misurazioniOPENCV.txt", std::ofstream::out | std::ofstream::app);
-			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+			// os_opencv.open("misurazioniOPENCV.txt", std::ofstream::out | std::ofstream::app);
+			// std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 			birdsEyeView(image, output);
-			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-			std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " [µs]" << std::endl;
-			//std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << " [ns]" << std::endl;
-			os_opencv << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<"\n";
-			os_opencv.close();
+			// std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+			// std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " [µs]" << std::endl;
+			// os_opencv << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<"\n";
+			// os_opencv.close();
 
 		}
 		//per la visualizzazione 
