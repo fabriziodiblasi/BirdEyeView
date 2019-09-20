@@ -1,6 +1,7 @@
 #include "../lib/utilities.h"
 using namespace std;
 using namespace cv;
+cv::cuda::GpuMat input, output;
 
 
 __global__ void pixelRemappingCudaKernel(cv::cuda::PtrStepSz<uchar3> src,
@@ -74,7 +75,7 @@ __global__ void pixelRemappingCudaKernel(cv::cuda::PtrStepSz<uchar3> src,
 
 
 
-cv::cuda::GpuMat input, output;
+
 cudaError_t warpPerspectiveRemappingCUDA(Mat inputFrame, Mat &outputFrame, Mat H){
     cudaError_t cudaStatus;
     int size = inputFrame.rows * inputFrame.cols;
