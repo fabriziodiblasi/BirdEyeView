@@ -224,7 +224,10 @@ void CUDA_birdsEyeView(const Mat &input, Mat &output){
 	
 	
 	//warpPerspectiveCUDA(input, output, tranf_mat);
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 	warpPerspectiveRemappingCUDA(input, output, tranf_mat);
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<std::endl;
 	
 	return;
 
@@ -301,18 +304,20 @@ int main(int argc, char const *argv[]) {
 
 		if (CUDA){
 			// os_cuda.open("misurazioniCUDA.txt", std::ofstream::out | std::ofstream::app);
-			// std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 			CUDA_birdsEyeView(image, output);
-			// std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+			// std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<std::endl;
 			// std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " [µs]" << std::endl;
 			// os_cuda << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<"\n";
 			// os_cuda.close();
 
 		}else{
 			// os_opencv.open("misurazioniOPENCV.txt", std::ofstream::out | std::ofstream::app);
-			// std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 			birdsEyeView(image, output);
-			// std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+			// std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << std::endl;
 			// std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " [µs]" << std::endl;
 			// os_opencv << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<"\n";
 			// os_opencv.close();
