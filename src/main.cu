@@ -82,20 +82,17 @@ void birdsEyeView(const Mat &input, Mat &output){
 		0, 0, 1, 0
 		); 
 
-	// cout << "\n R * A1 :\n"<< R * A1 <<endl;
 	
-	// cout << "\n T * (R * A1) : \n"<< T * (R * A1) <<endl;	
-
-	// cout << "\n K * (T * (R * A1)) : \n"<< K * (T * (R * A1)) <<endl;	
-
 	Mat transformationMat = K * (T * (R * A1));
 
-	//cout<< " transformationMat : \n "<< transformationMat << endl;
+	//warpPerspective(input, output, transformationMat, input_size, INTER_CUBIC | WARP_INVERSE_MAP);
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-	//cout<< "transformationMat.rows : " << transformationMat.rows << "\ttransformationMat.cols : " << transformationMat.cols << endl;
-	//cout << "tipo matrice di transformazione : "<< "CV_" + type2str( transformationMat.type()) << endl;
+	output = warpPerspectiveCPU(input, transformationMat);
+	
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<std::endl;
 
-	warpPerspective(input, output, transformationMat, input_size, INTER_CUBIC | WARP_INVERSE_MAP);
 
 	return;
 
@@ -247,9 +244,9 @@ int main(int argc, char const *argv[]) {
 	int flag=0;
 	Mat image,output;
 	
-	std::ofstream os_cuda;
+	// std::ofstream os_cuda;
 	// os_cuda.open("misurazioniCUDA.txt", std::ofstream::out | std::ofstream::app);
-	std::ofstream os_opencv;
+	// std::ofstream os_opencv;
 	// os_opencv.open("misurazioniOPENCV.txt", std::ofstream::out | std::ofstream::app);
 
 	VideoCapture capture;
@@ -257,10 +254,14 @@ int main(int argc, char const *argv[]) {
 	if (cudaflag == "y"){
 		CUDA = true;
 		cout<<"** CUDA ON ** \n";
-	}else{
+	}else if (cudaflag == "n"){
 		CUDA = false;
 		cout<<"** CUDA OFF ** \n";
 		
+	}else{
+		cerr << "Usage: " << argv[0] << " < CUDA : y / n > <' /path/to/video/ ' | nothing > " << endl;
+	  	cout << "Exiting...." << endl;
+	  	return -1;
 	}
 
 	if (argc == 2){
@@ -317,7 +318,7 @@ int main(int argc, char const *argv[]) {
 			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 			birdsEyeView(image, output);
 			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-			// std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << std::endl;
+			//std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << std::endl;
 			// std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " [µs]" << std::endl;
 			// os_opencv << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<"\n";
 			// os_opencv.close();

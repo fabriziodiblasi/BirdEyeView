@@ -112,13 +112,7 @@ cudaError_t warpPerspectiveRemappingCUDA(Mat inputFrame, Mat &outputFrame, Mat H
         goto ErrorWarp;
     }
 
-    //copio sul device lo spazio per il vettor di trasposizione
-    cudaStatus = cudaMemset(d_T, 0, sizeof(int) * size);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "CudaMemSetfailed: %s\n", cudaGetErrorString(cudaStatus));
-        goto ErrorWarp;
-    }
-
+    
     //carico il frame in input sulla GPU
 
     input.upload(inputFrame);
