@@ -9,7 +9,7 @@ __global__ void pixelRemappingCudaKernel(cv::cuda::PtrStepSz<uchar3> src,
                                             size_t step,
                                             int numChannel,
                                             float *H, 
-                                            int *transfArray, 
+                                             
                                             int numRows, 
                                             int numCols){
 
@@ -20,6 +20,7 @@ __global__ void pixelRemappingCudaKernel(cv::cuda::PtrStepSz<uchar3> src,
     uchar3 pxval;
     int homeX, homeY;
     int newhomeX, newhomeY;
+    int tranf_pos;
     
     //if (row < numARows && col < numAColumns) {
     if (idx < numRows * numCols) {
@@ -47,17 +48,17 @@ __global__ void pixelRemappingCudaKernel(cv::cuda::PtrStepSz<uchar3> src,
             if (y < MinY) MinY = y;
         }
         if( y >= numRows || y<0 || x >= numCols ||  x < 0){
-            transfArray[idx]  = -1;
+            tranf_pos  = -1;
             // cout << "x= " << x << "y= "<< y << endl;
         }else{
-            transfArray[idx] = (y * numCols + x); 
+            tranf_pos = (y * numCols + x); 
             
             //------pezzo aggiunto 
             
             homeX=idx % numCols;
             homeY=idx / numCols;
-            newhomeX = transfArray[idx] % numCols; // Col ID
-            newhomeY = transfArray[idx] / numCols;  // Row ID
+            newhomeX = tranf_pos % numCols; // Col ID
+            newhomeY = tranf_pos / numCols;  // Row ID
             //srcval = src(homeY, homeX*numChannel);
 
             pxval = src(homeY, homeX );
@@ -80,10 +81,10 @@ cudaError_t warpPerspectiveRemappingCUDA(Mat inputFrame, Mat &outputFrame, Mat H
     cudaError_t cudaStatus;
     int size = inputFrame.rows * inputFrame.cols;
     int channels   = input.channels();
-    int *TransArry = (int *)malloc(sizeof(int)*size);
+    //int *TransArry = (int *)malloc(sizeof(int)*size);
     float *vecH = (float *)malloc(sizeof(float) * H.rows * H.cols);
     float *d_H;
-    int *d_T;
+    //int *d_T;
     
     
     matToArray(vecH, H, H.rows, H.cols);
@@ -97,11 +98,7 @@ cudaError_t warpPerspectiveRemappingCUDA(Mat inputFrame, Mat &outputFrame, Mat H
         goto ErrorWarp;
     }
     
-    cudaStatus = cudaMalloc((void **) &d_T, sizeof(int) * size);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto ErrorWarp;
-    }
+    
 
     // COPIO I DATI SULLA GPU
 
@@ -124,7 +121,7 @@ cudaError_t warpPerspectiveRemappingCUDA(Mat inputFrame, Mat &outputFrame, Mat H
     // cout <<" \n RICHIAMO IL KERNEL \n";
 
 
-    pixelRemappingCudaKernel<<<ceil(size/1024.0),1024>>>(input, output, inputFrame.step, inputFrame.channels(), d_H, d_T, inputFrame.rows, inputFrame.cols);
+    pixelRemappingCudaKernel<<<ceil(size/1024.0),1024>>>(input, output, inputFrame.step, inputFrame.channels(), d_H, inputFrame.rows, inputFrame.cols);
 
     
     
@@ -138,12 +135,12 @@ cudaError_t warpPerspectiveRemappingCUDA(Mat inputFrame, Mat &outputFrame, Mat H
     output.download(outputFrame);
 
     cudaFree(d_H);
-    cudaFree(d_T);
+    //cudaFree(d_T);
     return cudaStatus;
 
 ErrorWarp:
     cudaFree(d_H);
-    cudaFree(d_T);
+    //cudaFree(d_T);
     return cudaStatus;
 }
 

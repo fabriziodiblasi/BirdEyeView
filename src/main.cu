@@ -19,6 +19,89 @@ int alpha_ = 90, beta_ = 90, gamma_ = 90;
 int f_ = 500, dist_ = 500;
 
 
+void CUDA_birdsEyeView_OPT(const Mat &input, Mat &output){
+	double focalLength, dist, alpha, beta, gamma; 
+
+	alpha =((double)alpha_ -90) * PI/180;
+	beta =((double)beta_ -90) * PI/180;
+	gamma =((double)gamma_ -90) * PI/180;
+	focalLength = (double)f_;
+	dist = (double)dist_;
+
+	Size input_size = input.size();
+	double w = (double)input_size.width, h = (double)input_size.height;
+
+
+	// Projecion matrix 2D -> 3D
+	
+	Mat A1 = (Mat_<float>(4, 3)<< 
+		1, 0, -w/2,
+		0, 1, -h/2,
+		0, 0, 0,
+		0, 0, 1 );
+	
+	
+	// Rotation matrices Rx, Ry, Rz
+
+	Mat RX = (Mat_<float>(4, 4) << 
+		1, 0, 0, 0,
+		0, cos(alpha), -sin(alpha), 0,
+		0, sin(alpha), cos(alpha), 0,
+		0, 0, 0, 1 );
+
+	Mat RY = (Mat_<float>(4, 4) << 
+		cos(beta), 0, -sin(beta), 0,
+		0, 1, 0, 0,
+		sin(beta), 0, cos(beta), 0,
+		0, 0, 0, 1	);
+
+	Mat RZ = (Mat_<float>(4, 4) << 
+		cos(gamma), -sin(gamma), 0, 0,
+		sin(gamma), cos(gamma), 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1	);
+
+	// R - rotation matrix
+	Mat R = RX * RY * RZ;
+	// cout<< " R : \n "<< R << endl;
+
+
+
+	// T - translation matrix
+	Mat T = (Mat_<float>(4, 4) << 
+		1, 0, 0, 0,  
+		0, 1, 0, 0,  
+		0, 0, 1, dist,  
+		0, 0, 0, 1); 
+	
+	// K - intrinsic matrix 
+	Mat K = (Mat_<float>(3, 4) << 
+		focalLength, 0, w/2, 0,
+		0, focalLength, h/2, 0,
+		0, 0, 1, 0
+		); 
+
+	//std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
+	Mat transformationMat = K * (T * (R * A1));
+	//std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	//std::cout<< std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<std::endl;
+	
+	// cout << "richiamo la funzione warpPerspectiveCUDA \n";
+	
+	
+	//warpPerspectiveCUDA(input, output, tranf_mat);
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	warpPerspectiveRemappingCUDA(input, output, transformationMat);
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<std::endl;
+	
+	return;
+}
+
+
+
+
 
 void birdsEyeView(const Mat &input, Mat &output){
 	double focalLength, dist, alpha, beta, gamma; 
@@ -85,10 +168,10 @@ void birdsEyeView(const Mat &input, Mat &output){
 	
 	Mat transformationMat = K * (T * (R * A1));
 
-	//warpPerspective(input, output, transformationMat, input_size, INTER_CUBIC | WARP_INVERSE_MAP);
+	
 	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-
-	output = warpPerspectiveCPU(input, transformationMat);
+	warpPerspective(input, output, transformationMat, input_size, INTER_CUBIC | WARP_INVERSE_MAP);
+	//output = warpPerspectiveCPU(input, transformationMat);
 	
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 	std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<std::endl;
@@ -306,7 +389,8 @@ int main(int argc, char const *argv[]) {
 		if (CUDA){
 			// os_cuda.open("misurazioniCUDA.txt", std::ofstream::out | std::ofstream::app);
 			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-			CUDA_birdsEyeView(image, output);
+			//CUDA_birdsEyeView(image, output);
+			CUDA_birdsEyeView_OPT(image,output);
 			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 			// std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<std::endl;
 			// std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " [µs]" << std::endl;
