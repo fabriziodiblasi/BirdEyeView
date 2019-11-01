@@ -65,7 +65,9 @@ unzip opencv.zip -d .
 
 git clone https://github.com/opencv/opencv_contrib.git
 
-(or wget -O opencv_contrib https://github.com/opencv/opencv_contrib/archive/4.1.1.zip )
+        or :
+        wget -O opencv_contrib https://github.com/opencv/opencv_contrib/archive/4.1.1.zip 
+        unzip opencv.zip -d .
 
 cd ~/opencv-4.1.1
 
